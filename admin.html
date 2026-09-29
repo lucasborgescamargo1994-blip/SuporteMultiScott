@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suporte Multiplataforma · Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6fa; --surface:#ffffff; --surface-2:#f0f2f8; --text:#151a2d; --muted:#5b6278; --faint:#8a90a6;
+  --border:#e2e5ee; --accent:#4f46e5; --accent-strong:#4338ca; --accent-soft:#eef0ff;
+  --a:#0f8f84; --a-soft:#e4f5f3; --b:#7c3aed; --b-soft:#f2ecff;
+  --ok:#15803d; --ok-soft:#e7f6ec; --warn:#b45309; --warn-soft:#fdf3e2; --err:#c62828; --err-soft:#fdecec;
+  --shadow:0 1px 2px rgba(20,25,45,.06),0 4px 16px rgba(20,25,45,.06);
+  --radius:14px; --side:236px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1020; --surface:#151a2c; --surface-2:#1c2238; --text:#e8eaf4; --muted:#a3a9be; --faint:#7a809a;
+    --border:#2a3150; --accent:#8b85ff; --accent-strong:#a39eff; --accent-soft:#23264a;
+    --a:#2cc9b8; --a-soft:#10332f; --b:#a88bfa; --b-soft:#271f45;
+    --ok:#4ade80; --ok-soft:#12301d; --warn:#fbbf24; --warn-soft:#352812; --err:#f87171; --err-soft:#3a1818;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1020; --surface:#151a2c; --surface-2:#1c2238; --text:#e8eaf4; --muted:#a3a9be; --faint:#7a809a;
+  --border:#2a3150; --accent:#8b85ff; --accent-strong:#a39eff; --accent-soft:#23264a;
+  --a:#2cc9b8; --a-soft:#10332f; --b:#a88bfa; --b-soft:#271f45;
+  --ok:#4ade80; --ok-soft:#12301d; --warn:#fbbf24; --warn-soft:#352812; --err:#f87171; --err-soft:#3a1818;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* ── Layout ─────────────────────────────── */
+.app{display:grid;grid-template-columns:var(--side) 1fr;height:100vh;height:100dvh}
+.side{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;min-height:0}
+.brand{display:flex;gap:10px;align-items:center;padding:18px 18px 14px}
+.brand-mark{width:36px;height:36px;border-radius:10px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:15px;flex-shrink:0}
+.brand h1{font-size:14px;font-weight:800;letter-spacing:-.2px;line-height:1.2}
+.brand small{display:block;font-size:11px;color:var(--muted);font-weight:500}
+.nav{display:flex;flex-direction:column;gap:2px;padding:6px 10px;flex:1;overflow-y:auto}
+.nav-sec{font-size:10.5px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.6px;padding:14px 10px 6px}
+.nav button,.nav a{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:none;background:none;border-radius:9px;color:var(--muted);font-weight:600;font-size:13.5px;text-align:left;text-decoration:none}
+.nav button:hover,.nav a:hover{background:var(--surface-2);color:var(--text)}
+.nav button.on{background:var(--accent-soft);color:var(--accent-strong)}
+.nav .ico{width:20px;text-align:center;font-size:15px}
+.nav .count{margin-left:auto;background:var(--err);color:#fff;font-size:10.5px;font-weight:700;border-radius:20px;padding:1px 7px;min-width:20px;text-align:center}
+.nav .count:empty{display:none}
+.side-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;color:var(--faint)}
+.side-foot span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.top{display:flex;align-items:center;gap:12px;padding:16px 26px;border-bottom:1px solid var(--border);background:var(--surface)}
+.top h2{font-size:18px;font-weight:800;letter-spacing:-.3px}
+.top p{font-size:12.5px;color:var(--muted)}
+.top .grow{flex:1;min-width:0}
+.view{flex:1;overflow:auto;padding:22px 26px 40px;min-height:0}
+.view.flush{padding:0;overflow:hidden}
+
+/* ── Componentes ───────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--surface);padding:7px 13px;border-radius:9px;font-weight:600;font-size:13px;white-space:nowrap;text-decoration:none;color:var(--text)}
+.btn:hover{border-color:var(--accent);color:var(--accent-strong)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.pri:hover{background:var(--accent-strong);color:#fff}
+.btn.ghost{border-color:transparent;background:none}
+.btn.danger{color:var(--err)}
+.btn.danger:hover{border-color:var(--err)}
+.btn.sm{padding:4px 9px;font-size:12px;border-radius:7px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.card-h h3{font-size:14px;font-weight:700}
+.card-b{padding:16px 18px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.muted{color:var(--muted)} .faint{color:var(--faint)} .small{font-size:12px}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.tag.a{background:var(--a-soft);color:var(--a)} .tag.b{background:var(--b-soft);color:var(--b)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)} .tag.warn{background:var(--warn-soft);color:var(--warn)} .tag.err{background:var(--err-soft);color:var(--err)}
+.tag.acc{background:var(--accent-soft);color:var(--accent-strong)}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;color:var(--muted)}
+label.f span.hint{font-weight:500;color:var(--faint)}
+.inp,select.inp,textarea.inp{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:9px;background:var(--surface);outline:none;font-size:13.5px;font-weight:500;color:var(--text)}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
+input[type=color].inp{padding:3px;height:38px}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:none;background:none;padding:6px 11px;border-radius:8px;font-weight:600;font-size:12.5px;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);font-weight:700;padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+table.t td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+table.t tr:last-child td{border-bottom:none}
+table.t tbody tr:hover td{background:var(--surface-2)}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty .big{font-size:34px;margin-bottom:8px}
+.kpi{padding:16px 18px}
+.kpi .l{font-size:12px;color:var(--muted);font-weight:600}
+.kpi .v{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:11.5px;color:var(--faint)}
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:minmax(90px,170px) 1fr 44px;gap:10px;align-items:center;font-size:12.5px}
+.bar .track{height:10px;background:var(--surface-2);border-radius:6px;overflow:hidden}
+.bar .fill{height:100%;background:var(--accent);border-radius:6px}
+.bar .n{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-weight:600}
+.bar .lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cols{display:flex;align-items:flex-end;gap:5px;height:130px;padding-top:10px}
+.cols .c{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;min-width:0}
+.cols .c i{display:block;width:100%;max-width:26px;background:var(--accent);border-radius:4px 4px 0 0;min-height:2px}
+.cols .c span{font-size:10px;color:var(--faint);white-space:nowrap}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:600;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:99;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.modal-bg{position:fixed;inset:0;background:rgba(10,12,25,.5);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal-bg.show{display:flex}
+.modal{background:var(--surface);border-radius:16px;width:min(680px,100%);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal-h{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-h h3{flex:1;font-size:15px;font-weight:800}
+.modal-b{padding:18px 20px;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.modal-f{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--border)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--border);background:var(--surface);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:600;color:var(--muted)}
+.chip:hover{border-color:var(--accent);color:var(--accent-strong)}
+.note{background:var(--accent-soft);color:var(--text);border-radius:10px;padding:11px 14px;font-size:12.5px}
+.note.warn{background:var(--warn-soft)}
+pre.code{background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:11.5px;overflow:auto;white-space:pre-wrap;word-break:break-all}
+.carregando{padding:40px;text-align:center;color:var(--muted)}
+
+/* login */
+.login{height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login form{width:min(380px,100%);background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:28px;display:flex;flex-direction:column;gap:14px}
+.login h1{font-size:19px;font-weight:800}
+.login p{font-size:13px;color:var(--muted)}
+.login .err{color:var(--err);font-size:12.5px;min-height:18px}
+
+/* ── Atendimento (teste do chat real) ──── */
+.atd{display:grid;grid-template-columns:270px minmax(0,1fr) 310px;height:100%;min-height:0}
+.atd.nodebug{grid-template-columns:270px minmax(0,1fr)}
+.atd.nodebug .dbg{display:none}
+.atd-l{border-right:1px solid var(--border);background:var(--surface);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.atd-l h4,.dbg h4{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);font-weight:700;margin-bottom:8px}
+.cli-pick{display:flex;flex-direction:column;gap:6px}
+.cli-pick button{display:flex;gap:10px;align-items:center;text-align:left;border:1px solid var(--border);background:var(--surface);border-radius:11px;padding:9px 10px}
+.cli-pick button.on{border-color:var(--accent);background:var(--accent-soft)}
+.cli-pick .av{width:34px;height:34px;border-radius:9px;background:var(--surface-2);display:grid;place-items:center;font-size:17px;flex-shrink:0}
+.cli-pick b{display:block;font-size:13px;font-weight:700;line-height:1.25}
+.cli-pick small{font-size:11px;color:var(--muted)}
+.chat-wrap{display:flex;flex-direction:column;min-height:0;background:var(--surface-2);padding:18px;align-items:center}
+.chat-wrap iframe{width:100%;max-width:460px;flex:1;min-height:0;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);background:var(--surface)}
+.link-box{display:flex;gap:6px}
+.link-box input{flex:1;min-width:0;font-size:11.5px;font-family:'JetBrains Mono',monospace}
+.dbg{border-left:1px solid var(--border);background:var(--surface);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.dbg .box{border:1px solid var(--border);border-radius:11px;padding:12px}
+.dbg .kv{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:3px 0}
+.dbg .kv span:first-child{color:var(--muted)}
+.dbg .kv b{text-align:right}
+.match{margin-top:8px}
+.match .mt{display:flex;justify-content:space-between;font-size:12px;gap:8px}
+.match .track{height:6px;background:var(--surface-2);border-radius:4px;margin-top:4px;overflow:hidden}
+.match .fill{height:100%;background:var(--accent)}
+.match .fill.hi{background:var(--ok)} .match .fill.md{background:var(--warn)} .match .fill.lo{background:var(--err)}
+.dbg-x{display:none;align-self:flex-end}
+.tokens{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.tokens span{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--surface-2);border-radius:5px;padding:1px 6px}
+
+/* ── Fila / Base / Kits ────────────────── */
+.q-item{padding:16px 18px;border-bottom:1px solid var(--border)}
+.q-item:last-child{border-bottom:none}
+.q-item .q{font-size:14.5px;font-weight:700}
+.q-item .vars{font-size:12px;color:var(--muted);margin-top:4px}
+.q-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.q-resolve{margin-top:12px;display:none;flex-direction:column;gap:10px;background:var(--surface-2);border-radius:11px;padding:12px}
+.q-resolve.show{display:flex}
+.kit-card .card-b{display:flex;flex-direction:column;gap:12px}
+.kit-ico{font-size:30px}
+.kit-card ul{padding-left:18px;font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.plan{padding:18px;display:flex;flex-direction:column;gap:10px}
+.plan .tag{align-self:flex-start}
+.plan .price{font-size:24px;font-weight:800;letter-spacing:-.5px}
+.plan .price small{font-size:12px;font-weight:600;color:var(--muted)}
+.cmp th:first-child,.cmp td:first-child{font-weight:700;color:var(--muted);width:150px}
+.cmp td{font-size:13px}
+.cli-card{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.cli-card .hd{display:flex;gap:12px;align-items:center}
+.cli-card .av{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;font-size:21px;flex-shrink:0}
+.cli-card h3{font-size:15px;font-weight:800}
+.var-chip{font-family:'JetBrains Mono',monospace;font-size:11px;border:1px dashed var(--border);border-radius:6px;padding:2px 7px;background:var(--surface);color:var(--muted)}
+.var-chip:hover{border-color:var(--accent);color:var(--accent-strong)}
+
+@media (max-width:1180px){
+  .atd,.atd.nodebug{grid-template-columns:250px minmax(0,1fr)}
+  .atd .dbg{display:none}
+  .atd.dbg-open .dbg{display:flex;position:fixed;right:0;top:0;bottom:0;width:min(320px,90vw);z-index:40;box-shadow:0 0 40px rgba(0,0,0,.25)}
+  .dbg-x{display:inline-flex}
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:860px){
+  body{overflow:auto}
+  .app{grid-template-columns:1fr;grid-template-rows:auto 1fr;height:auto;min-height:100vh}
+  .side{border-right:none;border-bottom:1px solid var(--border)}
+  .brand{padding:12px 16px 4px}
+  .nav{flex-direction:row;overflow-x:auto;padding:6px 10px 10px;flex:none}
+  .nav-sec,.side-foot{display:none}
+  .nav button,.nav a{width:auto;white-space:nowrap}
+  .top{padding:14px 16px;flex-wrap:wrap}
+  .view{padding:16px 16px 40px;overflow:visible}
+  .view.flush{overflow:visible}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .atd,.atd.nodebug{grid-template-columns:1fr;height:auto}
+  .atd-l{border-right:none;border-bottom:1px solid var(--border)}
+  .cli-pick{flex-direction:row;overflow-x:auto}
+  .cli-pick button{min-width:190px}
+  .chat-wrap{padding:12px;height:80vh}
+  .bar{grid-template-columns:100px 1fr 40px}
+}
+</style>
+</head>
+<body>
+<div id="raiz"><div class="carregando">Carregando…</div></div>
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="kits.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ESTADO — carregado do Supabase
+   ═══════════════════════════════════════════════════════════════ */
+const CFG = window.SM_CONFIG || {};
+const THEME_KEY = 'sm_tema';
+const clone = o => JSON.parse(JSON.stringify(o));
+const PRECOS_PADRAO = { A_proprio:{setup:290,mensal:149}, A_criado:{setup:690,mensal:199}, B_proprio:{setup:490,mensal:299}, B_criado:{setup:990,mensal:379}, descontoPiloto:50 };
+let sb = null, eu = null;
+const S = { empresas:[], base:{}, fila:[], kits:{}, ajustes:{ limiar:0.45, precos:clone(PRECOS_PADRAO) }, acessos:[] };
+const ui = { view:'atendimento', empresaAtiva:null, debug:innerWidth>1180, ultimaAnalise:null, baseEmpresa:null, baseBusca:'', filaEmpresa:'', relEmpresa:'', relPeriodo:30, propEmpresa:null, kitAberto:null, iaStatus:null };
+
+function must(r){ if (r.error) throw r.error; return r.data; }
+// Supabase devolve no máximo 1000 linhas por consulta: esta função busca página por página
+async function paginar(fabrica, limite = 50000){
+  const out = [];
+  for (let de = 0; de < limite; de += 1000) { const d = must(await fabrica().range(de, de + 999)); out.push(...d); if (d.length < 1000) break; }
+  return out;
+}
+async function carregarTudo(){
+  const [emps, resps, kits, aj, acs] = await Promise.all([
+    sb.from('empresas').select('*').order('criado_em').then(must),
+    paginar(() => sb.from('respostas').select('*').order('id')),
+    sb.from('kits').select('*').then(must),
+    sb.from('ajustes').select('*').eq('id', 1).maybeSingle().then(must),
+    sb.from('perfis').select('*').eq('papel', 'empresa').then(must),
+  ]);
+  S.empresas = emps; S.base = {};
+  emps.forEach(e => S.base[e.id] = []);
+  resps.forEach(r => (S.base[r.empresa_id] || (S.base[r.empresa_id] = [])).push(r));
+  S.kits = Object.fromEntries(kits.map(k => [k.id, k.dados]));
+  if (!kits.length) await instalarKits();
+  if (aj) S.ajustes = { limiar: aj.limiar, precos: { ...clone(PRECOS_PADRAO), ...(aj.precos || {}) } };
+  S.acessos = acs;
+  await recarregarFila();
+  if (!emp(ui.empresaAtiva)) ui.empresaAtiva = S.empresas[0]?.id || null;
+}
+async function recarregarFila(){
+  const desde = new Date(Date.now() - 30 * 864e5).toISOString();
+  const [pend, feitas] = await Promise.all([
+    paginar(() => sb.from('fila').select('*').eq('status', 'pendente').order('id')),
+    sb.from('fila').select('*').neq('status', 'pendente').gte('resolvido_em', desde).order('resolvido_em', { ascending: false }).limit(50).then(must),
+  ]);
+  S.fila = [...pend, ...feitas]; atualizarBadges();
+}
+async function instalarKits(){
+  const rows = Object.values(KITS_PADRAO).map(k => ({ id: k.id, dados: k, atualizado_em: new Date().toISOString() }));
+  must(await sb.from('kits').upsert(rows));
+  S.kits = clone(KITS_PADRAO);
+}
+function respostasDoKit(kitId, empresaId){
+  return (S.kits[kitId]?.entradas || []).map(e => ({ empresa_id: empresaId, intencao: e.intencao, categoria: e.categoria, perguntas: [...e.perguntas], resposta: e.resposta, humano: !!e.humano, origem: 'kit' }));
+}
+function varsExemplo(kitId, sobrescrever = {}){ const v = {}; (S.kits[kitId]?.vars || []).forEach(x => v[x.k] = x.ex); return Object.assign(v, sobrescrever); }
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITÁRIOS
+   ═══════════════════════════════════════════════════════════════ */
+const $ = s => document.querySelector(s);
+function esc(s){return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function fmt(t){return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<b>$1</b>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/\n/g,'<br>')}
+function norm(t){return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim()}
+function brl(v){return Number(v || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+function dataHora(ts){return new Date(ts).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
+function pct(v){return Math.round(v * 100) + '%'}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),3000)}
+function erro(e){ console.error(e); toast('⚠️ ' + (e?.message || e)); }
+const emp = id => S.empresas.find(c => c.id === id);
+const kitDe = c => S.kits[c?.nicho] || null;
+function resolver(txt, c){return String(txt || '').replace(/\{\{(\w+)\}\}/g, (m, k) => { const v = c?.vars?.[k]; return v && String(v).trim() ? v : '(informação ainda não cadastrada)'; })}
+function bdNome(b){return b === 'criado' ? 'BD criado (kit do nicho)' : 'BD próprio'}
+function tagPlano(c){return `<span class="tag ${c.plano === 'B' ? 'b' : 'a'}">${c.plano === 'B' ? '✨ Opção B · IA' : '⚙️ Opção A · ML'}</span>`}
+function opcoesEmpresas(sel, todos){return (todos ? `<option value="">Todos os clientes</option>` : '') + S.empresas.map(c => `<option value="${c.id}" ${c.id === sel ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}
+function atualizarBadges(){ const n = S.fila.filter(f => f.status === 'pendente').length; const el = $('#filaCount'); if (el) el.textContent = n || ''; }
+function slugDe(t){ return norm(t).replace(/ /g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'empresa'; }
+const baseUrl = () => CFG.CHAT_URL ? CFG.CHAT_URL.replace(/\/?$/, '/') : new URL('.', location.href).href;
+function linkChat(c){ return `${baseUrl()}index.html?c=${encodeURIComponent(c.slug)}`; }
+function codigoWidget(c){ return `<script src="${baseUrl()}widget.js" data-empresa="${c.slug}" data-cor="${c.cor || '#4f46e5'}" async><\/script>`; }
+async function copiar(t){ try { await navigator.clipboard.writeText(t); toast('Copiado!'); } catch (e) { prompt('Copie:', t); } }
+const GENERICAS = new Set('voces voce qual quais quanto quanta como onde quando tem tenho para pelo pela esse essa isso este esta aqui gostaria queria saber favor fazem vende vendem aceita aceitam pode podem posso'.split(' '));
+function sugerirIntencao(p){ return norm(p).split(' ').filter(w => w.length > 3 && !GENERICAS.has(w)).slice(0, 3).join('_') || 'nova_intencao'; }
+
+function abrirModal(titulo, corpo, botoes){
+  $('#modal').innerHTML = `<div class="modal-h"><h3>${titulo}</h3><button class="btn ghost sm" data-act="fecharModal">✕</button></div><div class="modal-b">${corpo}</div><div class="modal-f">${botoes || '<button class="btn" data-act="fecharModal">Fechar</button>'}</div>`;
+  $('#modalBg').classList.add('show');
+  setTimeout(() => { const f = $('#modal .modal-b input, #modal .modal-b textarea'); f && f.focus(); }, 50);
+}
+function fecharModal(){ $('#modalBg').classList.remove('show'); }
+async function ocupado(el, fn){ const txt = el?.innerHTML; if (el) { el.disabled = true; el.innerHTML = '⏳'; } try { return await fn(); } catch (e) { erro(e); } finally { if (el && document.body.contains(el)) { el.disabled = false; el.innerHTML = txt; } } }
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGIN
+   ═══════════════════════════════════════════════════════════════ */
+async function iniciar(){
+  try { const t = localStorage.getItem(THEME_KEY); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  if (!window.smConfigurado || !smConfigurado()) {
+    $('#raiz').innerHTML = `<div class="login"><form><h1>Configuração pendente</h1><p>Preencha o arquivo <b>config.js</b> com a URL e a chave pública do seu projeto Supabase e siga o <b>LEIA-ME.md</b>.</p></form></div>`; return;
+  }
+  sb = supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_KEY);
+  const { data: { session } } = await sb.auth.getSession();
+  if (session && !session.user.is_anonymous) entrar(); else telaLogin();
+}
+function telaLogin(msg){
+  $('#raiz').innerHTML = `<div class="login"><form id="fLogin"><div class="brand-mark">SM</div><h1>Suporte Multiplataforma</h1><p>Acesso do administrador da franquia.</p>
+    <input class="inp" id="lEmail" type="email" placeholder="E-mail" autocomplete="username" required>
+    <input class="inp" id="lSenha" type="password" placeholder="Senha" autocomplete="current-password" required>
+    <div class="err" id="lErr">${esc(msg || '')}</div><button class="btn pri" style="justify-content:center">Entrar</button></form></div>`;
+  $('#fLogin').onsubmit = async e => {
+    e.preventDefault(); $('#lErr').textContent = '';
+    const { error } = await sb.auth.signInWithPassword({ email: $('#lEmail').value.trim(), password: $('#lSenha').value });
+    if (error) { $('#lErr').textContent = /invalid/i.test(error.message) ? 'E-mail ou senha incorretos.' : error.message; return; }
+    entrar();
+  };
+  $('#lEmail').focus();
+}
+async function entrar(){
+  $('#raiz').innerHTML = `<div class="carregando">Carregando dados…</div>`;
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    const perfil = must(await sb.from('perfis').select('*').eq('user_id', user.id).maybeSingle());
+    if (!perfil || perfil.papel !== 'admin') { await sb.auth.signOut(); return telaLogin(perfil ? 'Este usuário é de empresa: use o painel.html.' : 'Usuário sem perfil de administrador. Veja o passo "Primeiro acesso" no LEIA-ME.md.'); }
+    eu = { ...perfil, email: user.email };
+    await carregarTudo();
+  } catch (e) { console.error(e); return telaLogin('Erro ao carregar: ' + e.message + ' — o schema.sql foi executado?'); }
+  montarApp(); assinarFila(); ir(ui.view);
+}
+async function sair(){ await sb.auth.signOut(); location.reload(); }
+
+function montarApp(){
+  $('#raiz').innerHTML = `<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="brand-mark">SM</div><div><h1>Suporte Multiplataforma</h1><small>Franquia de atendimento automatizado</small></div></div>
+    <nav class="nav" id="nav">
+      <div class="nav-sec">Operação</div>
+      <button data-view="atendimento"><span class="ico">💬</span>Testar atendimento</button>
+      <a href="painel.html" target="_blank"><span class="ico">👥</span>Conversas ao vivo ↗</a>
+      <button data-view="fila"><span class="ico">🎯</span>Fila de treino<span class="count" id="filaCount"></span></button>
+      <button data-view="base"><span class="ico">🧠</span>Base de conhecimento</button>
+      <button data-view="relatorios"><span class="ico">📊</span>Relatórios</button>
+      <div class="nav-sec">Franquia</div>
+      <button data-view="clientes"><span class="ico">🏪</span>Clientes</button>
+      <button data-view="kits"><span class="ico">🧩</span>Kits de nicho</button>
+      <button data-view="planos"><span class="ico">💼</span>Planos e propostas</button>
+      <div class="nav-sec">Sistema</div>
+      <button data-view="config"><span class="ico">⚙️</span>Configurações</button>
+    </nav>
+    <div class="side-foot"><span title="${esc(eu.email)}">${esc(eu.email)}</span><button class="btn ghost sm" data-act="tema" title="Alternar tema">◐</button><button class="btn ghost sm" data-act="sair" title="Sair">⎋</button></div>
+  </aside>
+  <main class="main"><div class="top" id="top"></div><div class="view" id="view"></div></main></div>`;
+  atualizarBadges();
+}
+
+// fila em tempo real: novas perguntas não respondidas aparecem sem recarregar
+let _filaTimer = null;
+function assinarFila(){
+  sb.channel('admin-fila').on('postgres_changes', { event: '*', schema: 'public', table: 'fila' }, () => {
+    clearTimeout(_filaTimer);
+    _filaTimer = setTimeout(async () => {
+      try { await recarregarFila(); } catch (e) { return; }
+      if (ui.view === 'fila') { if (document.querySelector('.q-resolve.show')) toast('Nova pergunta na fila — termine esta e ela aparece'); else render(); }
+    }, 800);
+  }).subscribe();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VIEWS
+   ═══════════════════════════════════════════════════════════════ */
+const VIEWS = {
+  atendimento:{t:'Testar atendimento',s:'O chat real de cada cliente, com os bastidores do motor. Conversas daqui não entram nos relatórios.'},
+  fila:{t:'Fila de treino',s:'Perguntas que o bot não soube responder com certeza. 10 minutos por semana aqui mantêm a base afiada.'},
+  base:{t:'Base de conhecimento',s:'Intenções, variações de pergunta e respostas aprovadas de cada cliente.'},
+  relatorios:{t:'Relatórios',s:'Resultado dos atendimentos reais — use nos cases dos pilotos.'},
+  clientes:{t:'Clientes',s:'Empresas atendidas, link do chat, acessos ao painel e dados usados nas respostas.'},
+  kits:{t:'Kits de nicho',s:'Bases pré-prontas por segmento: só ajustar preços e horários e publicar.'},
+  planos:{t:'Planos e propostas',s:'Estrutura comercial dos planos e gerador de proposta.'},
+  config:{t:'Configurações',s:'Sensibilidade do motor, IA generativa e backup.'},
+};
+function ir(v){ ui.view = v; document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.view === v)); render(); }
+function render(){
+  const v = VIEWS[ui.view];
+  const acoes = {
+    atendimento: S.empresas.length ? `<button class="btn" data-act="toggleDebug">${ui.debug ? '🙈 Ocultar bastidores' : '🔍 Bastidores'}</button><button class="btn" data-act="novaConversaTeste">↺ Nova conversa</button>` : '',
+    fila: `<button class="btn" data-act="atualizarFila">🔄 Atualizar</button>`,
+    base: `<button class="btn" data-act="exportarBase">⬇ Exportar</button><button class="btn" data-act="importarBase">⬆ Importar</button><button class="btn pri" data-act="novaEntrada">＋ Nova resposta</button>`,
+    clientes: `<button class="btn pri" data-act="novoCliente">＋ Novo cliente</button>`,
+  }[ui.view] || '';
+  $('#top').innerHTML = `<div class="grow"><h2>${v.t}</h2><p>${v.s}</p></div><div class="row">${acoes}</div>`;
+  const view = $('#view'); view.className = 'view' + (ui.view === 'atendimento' && S.empresas.length ? ' flush' : '');
+  ({ atendimento:vAtendimento, fila:vFila, base:vBase, relatorios:vRelatorios, clientes:vClientes, kits:vKits, planos:vPlanos, config:vConfig })[ui.view]();
+  atualizarBadges();
+}
+function semClientes(){
+  $('#view').innerHTML = `<div class="empty" style="padding:60px"><div class="big">🏪</div><p>Nenhum cliente cadastrado ainda.</p><br>
+    <div class="row" style="justify-content:center"><button class="btn pri" data-act="novoCliente">＋ Novo cliente</button><button class="btn" data-act="criarExemplos">Criar 3 clientes de exemplo</button></div></div>`;
+}
+
+/* ── Testar atendimento ─────────────────── */
+function vAtendimento(){
+  if (!S.empresas.length) return semClientes();
+  if (!emp(ui.empresaAtiva)) ui.empresaAtiva = S.empresas[0].id;
+  const c = emp(ui.empresaAtiva);
+  const pend = S.fila.filter(f => f.empresa_id === c.id && f.status === 'pendente').length;
+  const pub = linkChat(c);
+  $('#view').innerHTML = `
+  <div class="atd ${ui.debug ? 'dbg-open' : 'nodebug'}">
+    <div class="atd-l">
+      <div><h4>Cliente</h4><div class="cli-pick">${S.empresas.map(x => `<button class="${x.id === c.id ? 'on' : ''}" data-act="escolherEmpresa" data-id="${x.id}"><span class="av">${kitDe(x)?.icone || '🏪'}</span><span><b>${esc(x.nome)}</b><small>${x.plano === 'B' ? '✨ Bot + IA' : '⚙️ Bot ML'} · ${x.ativo ? 'ativo' : '⛔ desativado'}</small></span></button>`).join('')}</div></div>
+      <div><h4>Link público do chat</h4><div class="link-box"><input class="inp" readonly value="${esc(pub)}"><button class="btn sm" data-act="copiarTxt" data-txt="${esc(pub)}">Copiar</button></div>
+        <div class="row" style="margin-top:6px"><a class="btn sm" href="${esc(pub)}" target="_blank">Abrir ↗</a><button class="btn sm" data-act="verWidget" data-id="${c.id}">Código do widget</button></div></div>
+      <div><h4>Plano ativo</h4>${tagPlano(c)}<p class="small muted" style="margin-top:6px">${c.plano === 'B' ? 'Linguagem natural com IA (prompt + RAG) usando só a base aprovada. Perguntas com alta confiança são respondidas direto, sem gastar IA.' : '100% previsível: responde apenas o que está cadastrado.'}</p></div>
+      <div><h4>Fila de treino</h4><button class="btn sm" data-act="irFila" data-id="${c.id}">🎯 ${pend} pendente${pend === 1 ? '' : 's'} →</button></div>
+    </div>
+    <div class="chat-wrap"><iframe id="chatFrame" title="Chat de teste" src="${esc(`index.html?c=${encodeURIComponent(c.slug)}&teste=1&full=1`)}"></iframe></div>
+    <div class="dbg" id="dbg"></div>
+  </div>`;
+  renderDebug();
+}
+function renderDebug(){
+  const d = $('#dbg'); if (!d) return; const a = ui.ultimaAnalise, c = emp(ui.empresaAtiva);
+  const fechar = `<button class="btn sm dbg-x" data-act="toggleDebug">✕ Fechar</button>`;
+  if (!a) { d.innerHTML = `${fechar}<div><h4>Bastidores</h4><p class="small muted">Converse no chat ao lado: aqui aparece como o motor interpretou cada mensagem — termos-chave, intenções candidatas, confiança e decisão. O cliente final nunca vê isso.</p></div>
+    <div class="box"><div class="kv"><span>Limiar de confiança</span><b>${pct(S.ajustes.limiar)}</b></div><div class="kv"><span>Respostas na base</span><b>${(S.base[c.id] || []).length}</b></div></div>`; return; }
+  const cls = s => s >= a.limiar ? 'hi' : s >= a.limiar * 0.6 ? 'md' : 'lo';
+  d.innerHTML = `${fechar}<div><h4>Bastidores · última mensagem</h4><p class="small">“${esc(a.pergunta)}”</p><div class="tokens">${(a.tokens || []).map(t => `<span>${esc(t)}</span>`).join('') || '<span>(sem termos-chave)</span>'}</div></div>
+  ${a.top ? `<div class="box"><h4>Intenções candidatas</h4>${a.top.map(m => `<div class="match"><div class="mt"><b>${esc(m.intencao)}</b><span class="mono">${pct(m.score)}</span></div><div class="track"><div class="fill ${cls(m.score)}" style="width:${Math.round(m.score * 100)}%"></div></div><div class="small faint">≈ “${esc(m.pat)}”</div></div>`).join('') || '<p class="small muted">Base vazia.</p>'}</div>` : ''}
+  <div class="box"><div class="kv"><span>Decisão</span></div><p class="small" style="margin-top:2px">${esc(a.decisao || '')}</p>${a.aviso ? `<p class="small" style="color:var(--warn);margin-top:6px">⚠️ ${esc(a.aviso)}</p>` : ''}
+  ${a.modo ? `<div class="kv" style="margin-top:8px"><span>Plano</span><b>${a.modo === 'B' ? 'B · IA + RAG' : 'A · Determinístico'}</b></div>` : ''}${a.limiar != null ? `<div class="kv"><span>Limiar</span><b>${pct(a.limiar)}</b></div>` : ''}${a.modelo ? `<div class="kv"><span>Modelo</span><b class="small">${esc(a.modelo)}</b></div>` : ''}${a.ms != null ? `<div class="kv"><span>Tempo no servidor</span><b>${a.ms} ms</b></div>` : ''}</div>`;
+}
+window.addEventListener('message', e => {
+  if (e.data?.tipo !== 'sm-analise') return;
+  ui.ultimaAnalise = e.data.analise; renderDebug();
+});
+
+/* ── Fila de treino ────────────────────── */
+function vFila(){
+  const pend = S.fila.filter(f => f.status === 'pendente' && (!ui.filaEmpresa || f.empresa_id === ui.filaEmpresa)).sort((a, b) => b.ocorrencias - a.ocorrencias || new Date(b.atualizado_em) - new Date(a.atualizado_em));
+  const resolv = S.fila.filter(f => f.status !== 'pendente' && (!ui.filaEmpresa || f.empresa_id === ui.filaEmpresa)).slice(0, 15);
+  const motivo = { sem_resposta:'sem correspondência', baixa_confianca:'confiança baixa', ia_sem_base:'IA sem base', feedback_negativo:'marcada como errada 👎' };
+  $('#view').innerHTML = `
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="card kpi"><div class="l">Pendentes</div><div class="v">${pend.length}</div><div class="s">≈ ${Math.max(1, Math.ceil(pend.length * 0.7))} min de curadoria</div></div>
+    <div class="card kpi"><div class="l">Ocorrências somadas</div><div class="v">${pend.reduce((s, f) => s + f.ocorrencias, 0)}</div><div class="s">vezes que perguntaram</div></div>
+    <div class="card kpi"><div class="l">Resolvidas (7 dias)</div><div class="v">${S.fila.filter(f => f.status === 'resolvida' && new Date(f.resolvido_em) > Date.now() - 7 * 864e5).length}</div><div class="s">viraram resposta na base</div></div>
+    <div class="card kpi"><div class="l">Filtro</div><select class="inp" style="margin-top:6px" data-chg="filaEmpresa">${opcoesEmpresas(ui.filaEmpresa, true)}</select></div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h3>Perguntas aguardando resposta</h3><span class="muted small" style="margin-left:auto">ordenadas por frequência · atualiza em tempo real</span></div>
+    ${pend.length ? pend.map(f => { const c = emp(f.empresa_id); const pal = f.palpite_id && (S.base[f.empresa_id] || []).find(e => e.id === f.palpite_id);
+      return `<div class="q-item">
+        <div class="row"><span class="q">“${esc(f.pergunta)}”</span></div>
+        <div class="row small" style="margin-top:6px"><span class="tag">${esc(c?.nome || '?')}</span><span class="tag warn">${f.ocorrencias}× perguntada</span><span class="tag">${motivo[f.motivo] || esc(f.motivo || '')}</span>${pal ? `<span class="tag acc">palpite: ${esc(pal.intencao)} · ${pct(f.palpite_score || 0)}</span>` : ''}<span class="faint">${dataHora(f.atualizado_em)}</span>${f.exemplo ? '<span class="tag">exemplo</span>' : ''}</div>
+        ${f.variacoes?.length ? `<div class="vars">Também perguntaram: ${f.variacoes.map(v => '“' + esc(v) + '”').join(' · ')}</div>` : ''}
+        <div class="q-actions">
+          ${pal ? `<button class="btn sm pri" data-act="filaVincular" data-id="${f.id}" data-e="${pal.id}">✓ É “${esc(pal.intencao)}”</button>` : ''}
+          <button class="btn sm" data-act="filaAbrir" data-id="${f.id}" data-modo="nova">✍️ Criar resposta</button>
+          <button class="btn sm" data-act="filaAbrir" data-id="${f.id}" data-modo="vincular">🔗 Vincular a existente</button>
+          <button class="btn sm ghost" data-act="filaIgnorar" data-id="${f.id}">Ignorar</button>
+        </div>
+        <div class="q-resolve" id="qr_${f.id}"></div>
+      </div>`; }).join('') : `<div class="empty"><div class="big">🎉</div><p>Nenhuma pergunta pendente. A base está cobrindo tudo o que os clientes perguntaram.</p></div>`}
+  </div>
+  ${resolv.length ? `<div class="card" style="margin-top:16px;overflow:auto"><div class="card-h"><h3>Tratadas nos últimos 30 dias</h3></div><table class="t"><thead><tr><th>Pergunta</th><th>Cliente</th><th>Resultado</th><th>Quando</th></tr></thead><tbody>${resolv.map(f => `<tr><td>${esc(f.pergunta)}</td><td>${esc(emp(f.empresa_id)?.nome || '?')}</td><td>${f.status === 'resolvida' ? `<span class="tag ok">→ ${esc(f.intencao_final || 'resposta')}</span>` : '<span class="tag">ignorada</span>'}</td><td class="faint">${dataHora(f.resolvido_em || f.atualizado_em)}</td></tr>`).join('')}</tbody></table></div>` : ''}`;
+}
+async function filaAbrir(id, modo){
+  const f = S.fila.find(x => x.id === id), box = $('#qr_' + id), c = emp(f.empresa_id);
+  document.querySelectorAll('.q-resolve.show').forEach(b => { if (b !== box) { b.classList.remove('show'); b.innerHTML = ''; } });
+  box.classList.add('show');
+  if (modo === 'vincular') {
+    box.innerHTML = `<p class="small muted">Calculando semelhança…</p>`;
+    let ord;
+    try {
+      const r = await smChamar(sb, 'analisar', { empresa_id: f.empresa_id, texto: f.pergunta, n: 3000 });
+      const base = S.base[f.empresa_id] || [];
+      ord = r.top.map(m => ({ e: base.find(x => x.id === m.id), s: m.score })).filter(o => o.e);
+    } catch (e) { box.innerHTML = `<p class="small" style="color:var(--err)">${esc(e.message)}</p>`; return; }
+    box.innerHTML = `<label class="f">Qual resposta existente atende essa pergunta?<select class="inp" id="qv_${id}">${ord.map(o => `<option value="${o.e.id}">${esc(o.e.intencao)} (${pct(o.s)}) — ${esc(resolver(o.e.resposta, c).slice(0, 70))}…</option>`).join('')}</select></label>
+      <p class="small muted">A pergunta${f.variacoes?.length ? ' e suas variações serão adicionadas' : ' será adicionada'} como nova forma de perguntar — o bot passa a reconhecê-la.</p>
+      <div class="row"><button class="btn pri sm" data-act="filaVincularSel" data-id="${id}">Salvar vínculo</button><button class="btn sm ghost" data-act="filaFechar" data-id="${id}">Cancelar</button></div>`;
+    return;
+  }
+  const kit = kitDe(c);
+  box.innerHTML = `<div class="grid g2"><label class="f">Intenção (nome curto)<input class="inp" id="qi_${id}" value="${esc(sugerirIntencao(f.pergunta))}"></label><label class="f">Categoria<input class="inp" id="qc_${id}" value="Geral" list="catList_${id}"><datalist id="catList_${id}">${[...new Set((S.base[f.empresa_id] || []).map(e => e.categoria))].map(x => `<option value="${esc(x)}">`).join('')}</datalist></label></div>
+    <label class="f">Resposta aprovada <span class="hint">— use variáveis para dados que mudam</span><textarea class="inp" id="qa_${id}" placeholder="Escreva a resposta que o bot deve dar…"></textarea></label>
+    <div class="chips">${(kit?.vars || []).map(v => `<button class="var-chip" data-act="inserirVar" data-alvo="qa_${id}" data-v="${v.k}" title="${esc(v.label)}">{{${v.k}}}</button>`).join('')}</div>
+    <div class="row"><button class="btn pri sm" data-act="filaSalvarNova" data-id="${id}">Salvar na base</button><button class="btn sm" data-act="filaSugerirIA" data-id="${id}">✨ Rascunho com IA</button><button class="btn sm ghost" data-act="filaFechar" data-id="${id}">Cancelar</button></div>`;
+}
+async function adicionarVariacoes(e, lista){
+  const novas = [...e.perguntas]; lista.forEach(p => { if (p && !novas.some(x => norm(x) === norm(p))) novas.push(p); });
+  const r = must(await sb.from('respostas').update({ perguntas: novas, atualizado_em: new Date().toISOString() }).eq('id', e.id).select().single());
+  Object.assign(e, r);
+}
+async function filaResolver(f, e){
+  const upd = { status: 'resolvida', resolvido_em: new Date().toISOString(), resposta_id: e.id, intencao_final: e.intencao };
+  must(await sb.from('fila').update(upd).eq('id', f.id));
+  Object.assign(f, upd); toast(`✓ Base atualizada: “${e.intencao}”`); render();
+}
+
+/* ── Base de conhecimento ──────────────── */
+function vBase(){
+  if (!S.empresas.length) return semClientes();
+  if (!emp(ui.baseEmpresa)) ui.baseEmpresa = ui.empresaAtiva || S.empresas[0].id;
+  const c = emp(ui.baseEmpresa), base = S.base[c.id] || (S.base[c.id] = []);
+  const b = norm(ui.baseBusca);
+  const lista = base.filter(e => !b || norm(e.intencao + ' ' + e.categoria + ' ' + e.perguntas.join(' ') + ' ' + e.resposta).includes(b)).sort((x, y) => x.categoria.localeCompare(y.categoria) || x.intencao.localeCompare(y.intencao));
+  const orig = { kit:'<span class="tag acc">kit</span>', cliente:'<span class="tag">cliente</span>', curadoria:'<span class="tag ok">curadoria</span>' };
+  $('#view').innerHTML = `
+  <div class="row" style="margin-bottom:14px">
+    <select class="inp" style="max-width:280px" data-chg="baseEmpresa">${opcoesEmpresas(c.id)}</select>
+    <input class="inp" style="max-width:320px" placeholder="🔍 Buscar intenção, pergunta ou resposta…" value="${esc(ui.baseBusca)}" data-inp="baseBusca">
+    <span class="muted small">${base.length} respostas · ${base.reduce((s, e) => s + e.perguntas.length, 0)} formas de perguntar · ${bdNome(c.bd)}</span>
+    <span style="flex:1"></span>
+    ${kitDe(c) ? `<button class="btn sm" data-act="aplicarKit" data-id="${c.id}">🧩 Completar com o kit ${esc(kitDe(c).nome.split(' /')[0])}</button>` : ''}
+  </div>
+  <div class="card" style="margin-bottom:14px"><div class="card-b row"><b class="small">Testar pergunta:</b><input class="inp" style="flex:1;min-width:220px" id="testeIn" placeholder="Ex.: vocês entregam no bairro Jardim América?"><button class="btn sm" data-act="testarBase">Testar</button><div id="testeOut" class="small" style="width:100%"></div></div></div>
+  <div class="card" style="overflow:auto">
+    ${lista.length ? `<table class="t"><thead><tr><th>Intenção</th><th>Formas de perguntar</th><th>Resposta (como o cliente vê)</th><th>Origem</th><th>Usos</th><th></th></tr></thead><tbody>
+    ${lista.map(e => `<tr><td><b>${esc(e.intencao)}</b><div class="small faint">${esc(e.categoria)}${e.humano ? ' · encaminha humano' : ''}</div></td><td class="small">${e.perguntas.slice(0, 3).map(p => esc(p)).join('<br>')}${e.perguntas.length > 3 ? `<div class="faint">+${e.perguntas.length - 3} variações</div>` : ''}</td><td class="small" style="max-width:380px">${fmt(resolver(e.resposta, c))}</td><td>${orig[e.origem] || ''}</td><td class="mono small">${e.usos}</td><td style="white-space:nowrap"><button class="btn sm" data-act="editarEntrada" data-id="${e.id}">Editar</button> <button class="btn sm ghost danger" data-act="excluirEntrada" data-id="${e.id}">✕</button></td></tr>`).join('')}
+    </tbody></table>` : `<div class="empty"><div class="big">🧠</div><p>${base.length ? 'Nada encontrado para essa busca.' : c.bd === 'proprio' ? 'Plano com BD próprio: o cliente fornece as respostas. Comece por “＋ Nova resposta” ou complete com o kit do nicho.' : 'Base vazia.'}</p></div>`}
+  </div>`;
+  $('#testeIn').onkeydown = e => { if (e.key === 'Enter') A.testarBase($('[data-act=testarBase]')); };
+}
+function formEntrada(e, c){
+  const kit = kitDe(c);
+  return `<div class="grid g2"><label class="f">Intenção<input class="inp" id="feInt" value="${esc(e.intencao)}" placeholder="ex.: horario"></label><label class="f">Categoria<input class="inp" id="feCat" value="${esc(e.categoria)}" placeholder="ex.: Informações"></label></div>
+  <label class="f">Formas de perguntar <span class="hint">— uma por linha. Quanto mais variações, melhor o reconhecimento.</span><textarea class="inp" id="fePer" style="min-height:120px">${esc(e.perguntas.join('\n'))}</textarea></label>
+  <label class="f">Resposta aprovada<textarea class="inp" id="feRes" style="min-height:110px">${esc(e.resposta)}</textarea></label>
+  <div class="chips">${(kit?.vars || []).map(v => `<button class="var-chip" data-act="inserirVar" data-alvo="feRes" data-v="${v.k}" title="${esc(v.label)}">{{${v.k}}}</button>`).join('')}</div>
+  <label class="row small" style="gap:8px"><input type="checkbox" id="feHum" ${e.humano ? 'checked' : ''}> Depois de responder, chamar atendimento humano (consultas de pedido, OS, estoque…)</label>`;
+}
+function abrirEntrada(id){
+  const c = emp(ui.baseEmpresa), base = S.base[c.id];
+  const e = id ? base.find(x => x.id === id) : { intencao:'', categoria:'Geral', perguntas:[], resposta:'', humano:false };
+  abrirModal(id ? 'Editar resposta' : 'Nova resposta', formEntrada(e, c), `<button class="btn" data-act="fecharModal">Cancelar</button><button class="btn pri" data-act="salvarEntrada" data-id="${id || ''}">Salvar</button>`);
+}
+
+/* ── Relatórios (consulta o banco) ─────── */
+async function vRelatorios(){
+  $('#view').innerHTML = `<div class="row" style="margin-bottom:14px"><select class="inp" style="max-width:260px" data-chg="relEmpresa">${opcoesEmpresas(ui.relEmpresa, true)}</select>
+  <div class="seg">${[7,30,90].map(p => `<button class="${ui.relPeriodo === p ? 'on' : ''}" data-act="relPeriodo" data-id="${p}">${p} dias</button>`).join('')}</div></div><div id="relConteudo" class="carregando">Carregando relatórios…</div>`;
+  const alvo = ui.view, dias = Math.max(ui.relPeriodo, 14), desde = new Date(Date.now() - dias * 864e5).toISOString();
+  let M, C;
+  try {
+    [M, C] = await Promise.all([
+      paginar(() => { let q = sb.from('mensagens').select('id,resultado,intencao,feedback,criado_em,empresa_id,conversas!inner(teste)').eq('autor', 'bot').eq('conversas.teste', false).gte('criado_em', desde).order('id'); return ui.relEmpresa ? q.eq('empresa_id', ui.relEmpresa) : q; }),
+      paginar(() => { let q = sb.from('conversas').select('id,empresa_id,status,criado_em').eq('teste', false).not('ultima_mensagem', 'is', null).gte('criado_em', desde).order('id'); return ui.relEmpresa ? q.eq('empresa_id', ui.relEmpresa) : q; }),
+    ]);
+  } catch (e) { if (ui.view === alvo) $('#relConteudo').innerHTML = `<div class="empty">Erro: ${esc(e.message)}</div>`; return; }
+  if (ui.view !== 'relatorios') return;
+  const corte = Date.now() - ui.relPeriodo * 864e5;
+  const L = M.filter(m => new Date(m.criado_em) >= corte), CV = C.filter(c => new Date(c.criado_em) >= corte);
+  const tot = L.length, res = L.filter(l => l.resultado === 'resolvido' || l.resultado === 'saudacao').length, hum = L.filter(l => l.resultado === 'humano').length, fila = L.filter(l => l.resultado === 'fila' || l.resultado === 'sugestao').length;
+  const fb = L.filter(l => l.feedback), pos = fb.filter(l => l.feedback === 'pos').length;
+  const porInt = {}; L.filter(l => l.intencao && l.resultado !== 'fila').forEach(l => porInt[l.intencao] = (porInt[l.intencao] || 0) + 1);
+  const topInt = Object.entries(porInt).sort((a, b) => b[1] - a[1]).slice(0, 8); const mx = topInt[0]?.[1] || 1;
+  const serie = []; for (let i = 13; i >= 0; i--) { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - i); const f = d.getTime() + 864e5; serie.push({ lbl: d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}), n: M.filter(m => { const t = new Date(m.criado_em).getTime(); return t >= d.getTime() && t < f; }).length }); }
+  const md = Math.max(1, ...serie.map(d => d.n));
+  const porCli = S.empresas.filter(c => !ui.relEmpresa || c.id === ui.relEmpresa).map(c => { const x = L.filter(l => l.empresa_id === c.id); const r = x.filter(l => l.resultado === 'resolvido' || l.resultado === 'saudacao').length; return { c, n: x.length, conv: CV.filter(v => v.empresa_id === c.id).length, taxa: x.length ? r / x.length : 0, pend: S.fila.filter(f => f.empresa_id === c.id && f.status === 'pendente').length, base: (S.base[c.id] || []).length }; });
+  $('#relConteudo').className = '';
+  $('#relConteudo').innerHTML = `
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="card kpi"><div class="l">Conversas</div><div class="v">${CV.length}</div><div class="s">${tot} respostas do bot</div></div>
+    <div class="card kpi"><div class="l">Resolvidas sozinho</div><div class="v">${tot ? pct(res / tot) : '—'}</div><div class="s">${res} respostas sem ninguém</div></div>
+    <div class="card kpi"><div class="l">Encaminhadas</div><div class="v">${hum + fila}</div><div class="s">${hum} p/ humano · ${fila} p/ fila de treino</div></div>
+    <div class="card kpi"><div class="l">Aprovação</div><div class="v">${fb.length ? pct(pos / fb.length) : '—'}</div><div class="s">${fb.length} avaliações 👍/👎</div></div>
+  </div>
+  <div class="grid g2" style="margin-bottom:16px">
+    <div class="card"><div class="card-h"><h3>Assuntos mais perguntados</h3></div><div class="card-b">${topInt.length ? `<div class="bars">${topInt.map(([k, v]) => `<div class="bar"><span class="lbl">${esc(k)}</span><div class="track"><div class="fill" style="width:${v / mx * 100}%"></div></div><span class="n">${v}</span></div>`).join('')}</div>` : '<p class="muted small">Sem atendimentos reais no período.</p>'}</div></div>
+    <div class="card"><div class="card-h"><h3>Respostas do bot por dia (14 dias)</h3></div><div class="card-b"><div class="cols">${serie.map(d => `<div class="c" title="${d.lbl}: ${d.n}"><i style="height:${d.n / md * 100}%"></i><span>${d.lbl.slice(0, 2)}</span></div>`).join('')}</div></div></div>
+  </div>
+  <div class="card" style="overflow:auto"><div class="card-h"><h3>Por cliente</h3><span class="muted small" style="margin-left:auto">base para os cases dos pilotos</span></div>
+  <table class="t"><thead><tr><th>Cliente</th><th>Plano</th><th>Conversas</th><th>Respostas</th><th>Resolução automática</th><th>Fila pendente</th><th>Base</th></tr></thead><tbody>
+  ${porCli.map(x => `<tr><td><b>${esc(x.c.nome)}</b>${x.c.piloto ? ' <span class="tag warn">piloto</span>' : ''}</td><td>${tagPlano(x.c)}</td><td class="mono">${x.conv}</td><td class="mono">${x.n}</td><td>${x.n ? pct(x.taxa) : '—'}</td><td class="mono">${x.pend}</td><td class="mono">${x.base}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+/* ── Clientes ──────────────────────────── */
+function vClientes(){
+  if (!S.empresas.length) return semClientes();
+  $('#view').innerHTML = `<div class="grid g3">${S.empresas.map(c => { const k = kitDe(c); const pend = S.fila.filter(f => f.empresa_id === c.id && f.status === 'pendente').length; const acs = S.acessos.filter(a => a.empresa_id === c.id).length;
+    return `<div class="card cli-card"><div class="hd"><span class="av" style="background:${esc(c.cor)}22">${k?.icone || '🏪'}</span><div style="min-width:0"><h3>${esc(c.nome)}</h3><div class="small muted mono">/${esc(c.slug)}</div></div></div>
+    <div class="row">${tagPlano(c)}<span class="tag">${c.bd === 'criado' ? '🧩 BD criado' : '📝 BD próprio'}</span>${c.piloto ? '<span class="tag warn">piloto</span>' : ''}${c.ativo ? '' : '<span class="tag err">desativado</span>'}${c.exemplo ? '<span class="tag">exemplo</span>' : ''}</div>
+    <div class="small muted">${esc(k?.nome || 'Sem kit')} · ${(S.base[c.id] || []).length} respostas · ${pend} na fila · ${acs} acesso${acs === 1 ? '' : 's'} ao painel</div>
+    <div class="row"><button class="btn sm pri" data-act="abrirAtendimento" data-id="${c.id}">💬 Testar</button><button class="btn sm" data-act="editarCliente" data-id="${c.id}">Editar</button><button class="btn sm" data-act="verAcessos" data-id="${c.id}">Acessos</button><button class="btn sm" data-act="verWidget" data-id="${c.id}">Link / widget</button><button class="btn sm" data-act="verBase" data-id="${c.id}">Base</button><button class="btn sm" data-act="verProposta" data-id="${c.id}">Proposta</button></div></div>`; }).join('')}</div>`;
+}
+function formCliente(c){
+  const kit = S.kits[c.nicho];
+  return `<div class="grid g2"><label class="f">Nome do cliente<input class="inp" id="fcNome" value="${esc(c.nome)}" placeholder="Nome fantasia" ${c.id ? '' : 'data-inp="fcNome"'}></label>
+  <label class="f">Endereço do chat <span class="hint">(só letras, números e hífen)</span><input class="inp mono" id="fcSlug" value="${esc(c.slug || '')}" placeholder="minha-empresa"></label></div>
+  <div class="grid g2"><label class="f">Nicho (kit)<select class="inp" id="fcNicho" data-chg="fcNicho">${Object.values(S.kits).map(k => `<option value="${k.id}" ${k.id === c.nicho ? 'selected' : ''}>${k.icone} ${esc(k.nome)}</option>`).join('')}</select></label>
+  <label class="f">Plano<select class="inp" id="fcPlano"><option value="A" ${c.plano === 'A' ? 'selected' : ''}>Opção A · Bot determinístico / ML</option><option value="B" ${c.plano === 'B' ? 'selected' : ''}>Opção B · Bot + IA humanizada</option></select></label></div>
+  <div class="grid g2"><label class="f">Banco de dados<select class="inp" id="fcBd" ${c.id ? 'disabled' : ''}><option value="criado" ${c.bd === 'criado' ? 'selected' : ''}>BD criado — base do kit pré-configurada</option><option value="proprio" ${c.bd === 'proprio' ? 'selected' : ''}>BD próprio — o cliente fornece as respostas</option></select></label>
+  <label class="f">Tom de voz (IA)<select class="inp" id="fcTom">${['cordial','descontraído','formal'].map(t => `<option ${c.tom === t ? 'selected' : ''}>${t}</option>`).join('')}</select></label></div>
+  <div class="grid g2"><label class="f">Cor do chat<input class="inp" type="color" id="fcCor" value="${esc(c.cor || '#4f46e5')}"></label>
+  <div class="f" style="justify-content:flex-end;gap:8px"><label class="row small" style="gap:8px"><input type="checkbox" id="fcAtivo" ${c.ativo !== false ? 'checked' : ''}> Chat ativo (desmarque para tirar do ar)</label>
+  <label class="row small" style="gap:8px"><input type="checkbox" id="fcPiloto" ${c.piloto ? 'checked' : ''}> Projeto piloto</label></div></div>
+  <label class="f">Mensagem de boas-vindas <span class="hint">— vazio usa a do kit</span><textarea class="inp" id="fcSaud" style="min-height:60px" placeholder="${esc(kit?.saudacao || '')}">${esc(c.saudacao || '')}</textarea></label>
+  <div><b style="font-size:13px">Dados do negócio</b><p class="small muted">Preenchem as variáveis {{…}} das respostas. É aqui que se “ajusta preços e horários”.</p></div>
+  <div class="grid g2" id="fcVars">${camposVars(c.nicho, c.vars || {})}</div>`;
+}
+function camposVars(kitId, vals){ return (S.kits[kitId]?.vars || []).map(v => `<label class="f">${esc(v.label)} <span class="hint mono">{{${v.k}}}</span><textarea class="inp fcVar" data-k="${v.k}" style="min-height:40px" rows="1" placeholder="${esc(v.ex)}">${esc(vals[v.k] ?? '')}</textarea></label>`).join(''); }
+function abrirCliente(id){
+  const c = id ? emp(id) : { nome:'', slug:'', nicho:Object.keys(S.kits)[0], plano:'A', bd:'criado', piloto:false, tom:'cordial', cor:'#4f46e5', ativo:true, vars:{} };
+  abrirModal(id ? 'Editar cliente' : 'Novo cliente', formCliente(c), `${id ? `<button class="btn danger" data-act="excluirCliente" data-id="${id}" style="margin-right:auto">Excluir</button>` : ''}<button class="btn" data-act="fecharModal">Cancelar</button><button class="btn pri" data-act="salvarCliente" data-id="${id || ''}">Salvar</button>`);
+}
+async function criarEmpresa(dados){
+  const c = must(await sb.from('empresas').insert(dados).select().single());
+  S.empresas.push(c); S.base[c.id] = [];
+  if (c.bd === 'criado') { const rows = respostasDoKit(c.nicho, c.id); if (rows.length) S.base[c.id] = must(await sb.from('respostas').insert(rows).select()); }
+  return c;
+}
+function modalAcessos(id){
+  const c = emp(id), lista = S.acessos.filter(a => a.empresa_id === id);
+  abrirModal(`Acessos ao painel · ${esc(c.nome)}`, `
+    <p class="small muted">Quem tem acesso entra no <b>painel.html</b> para acompanhar as conversas e responder quando o cliente pedir uma pessoa.</p>
+    ${lista.length ? `<table class="t"><thead><tr><th>Nome</th><th>E-mail</th><th></th></tr></thead><tbody>${lista.map(a => `<tr><td>${esc(a.nome || '')}</td><td class="small">${esc(a.email || '')}</td><td><button class="btn sm ghost danger" data-act="removerAcesso" data-id="${a.user_id}" data-emp="${id}">Remover</button></td></tr>`).join('')}</tbody></table>` : '<p class="small">Nenhum acesso criado ainda.</p>'}
+    <div class="card"><div class="card-b" style="display:flex;flex-direction:column;gap:10px"><b class="small">Novo acesso</b>
+      <div class="grid g2"><label class="f">Nome do atendente<input class="inp" id="acNome" placeholder="Ex.: Maria"></label><label class="f">E-mail<input class="inp" id="acEmail" type="email" placeholder="atendente@empresa.com"></label></div>
+      <label class="f">Senha inicial <span class="hint">(mín. 8 caracteres — envie para a pessoa por um canal seguro)</span><input class="inp" id="acSenha" type="text" autocomplete="off"></label>
+      <div class="row"><button class="btn pri sm" data-act="criarAcesso" data-id="${id}">Criar acesso</button><span class="small muted">Link do painel: ${esc(baseUrl() + 'painel.html')}</span></div></div></div>`);
+}
+
+/* ── Kits ──────────────────────────────── */
+function vKits(){
+  const ks = Object.values(S.kits);
+  $('#view').innerHTML = `<div class="note" style="margin-bottom:16px">💡 <b>Argumento de venda:</b> “Já tenho a base pronta para o seu setor — só precisamos ajustar seus preços e horários.” Cada kit é modular: respostas com variáveis que vêm do cadastro do cliente.</div>
+  <div class="grid g3">${ks.map(k => { const n = S.empresas.filter(c => c.nicho === k.id).length; return `<div class="card kit-card"><div class="card-b">
+    <div class="row"><span class="kit-ico">${k.icone}</span><div><h3 style="font-size:15px">${esc(k.nome)}</h3><div class="small muted">${esc(k.descricao)}</div></div></div>
+    <ul>${k.modulos.map(m => `<li>${esc(m)}</li>`).join('')}</ul>
+    <div class="row small"><span class="tag acc">${k.entradas.length} respostas</span><span class="tag">${k.entradas.reduce((s, e) => s + e.perguntas.length, 0)} variações</span><span class="tag">${k.vars.length} variáveis</span><span class="tag">${n} cliente${n === 1 ? '' : 's'}</span></div>
+    <div class="row"><button class="btn sm" data-act="verKit" data-id="${k.id}">${ui.kitAberto === k.id ? 'Fechar' : 'Ver conteúdo'}</button><button class="btn sm" data-act="exportarKit" data-id="${k.id}">⬇ Exportar</button></div>
+  </div></div>`; }).join('')}</div>
+  ${ui.kitAberto && S.kits[ui.kitAberto] ? (() => { const k = S.kits[ui.kitAberto]; return `<div class="card" style="margin-top:16px;overflow:auto"><div class="card-h"><h3>${k.icone} ${esc(k.nome)} — conteúdo do kit</h3></div>
+  <table class="t"><thead><tr><th>Intenção</th><th>Exemplos de pergunta</th><th>Resposta modelo</th></tr></thead><tbody>${k.entradas.map(e => `<tr><td><b>${esc(e.intencao)}</b><div class="small faint">${esc(e.categoria)}</div></td><td class="small">${e.perguntas.slice(0, 3).map(esc).join('<br>')}</td><td class="small mono" style="max-width:420px;white-space:pre-wrap">${esc(e.resposta)}</td></tr>`).join('')}</tbody></table></div>`; })() : ''}
+  <div class="card" style="margin-top:16px"><div class="card-h"><h3>Atualizar kits com a curadoria</h3></div><div class="card-b row"><p class="small muted" style="flex:1;min-width:260px">Respostas criadas na fila de treino de um cliente podem virar padrão do nicho — assim todo novo cliente do segmento já nasce mais inteligente.</p><select class="inp" style="max-width:260px" id="kitDeEmpresa">${opcoesEmpresas(ui.empresaAtiva)}</select><button class="btn sm pri" data-act="promoverKit">Levar novidades para o kit</button><button class="btn sm ghost" data-act="restaurarKits">Restaurar kits padrão</button></div></div>`;
+}
+
+/* ── Planos ────────────────────────────── */
+function vPlanos(){
+  const P = S.ajustes.precos;
+  const card = (k, titulo, sub, cls) => `<div class="card plan"><span class="tag ${cls}">${titulo}</span><b>${sub}</b><div class="price">${brl(P[k].mensal)}<small>/mês</small></div><div class="small muted">Implantação: ${brl(P[k].setup)}</div>
+    <div class="grid g2" style="gap:8px"><label class="f">Implantação<input class="inp" type="number" min="0" step="10" value="${P[k].setup}" data-preco="${k}.setup"></label><label class="f">Mensal<input class="inp" type="number" min="0" step="10" value="${P[k].mensal}" data-preco="${k}.mensal"></label></div></div>`;
+  if (!emp(ui.propEmpresa)) ui.propEmpresa = S.empresas[0]?.id || null;
+  $('#view').innerHTML = `
+  <div class="card" style="overflow:auto;margin-bottom:16px"><div class="card-h"><h3>Estrutura dos planos</h3></div>
+  <table class="t cmp"><thead><tr><th>Camada</th><th><span class="tag a">Opção A</span> Bot determinístico / ML</th><th><span class="tag b">Opção B</span> Bot com IA generativa / humanizada</th></tr></thead><tbody>
+  <tr><td>Tecnologia</td><td>Fluxo de decisão, regras e aprendizado por intenções supervisionadas.</td><td>LLM (prompt + RAG) sobre a base aprovada; perguntas com alta confiança respondidas direto.</td></tr>
+  <tr><td>Nível de controle</td><td>100% previsível. Só responde o que está cadastrado.</td><td>Fluido e conversacional. Entende gírias, mensagens longas e contexto.</td></tr>
+  <tr><td>Ideal para</td><td>Quem tem medo da IA “inventar” e quer triagem, horários, preços e FAQ fixos.</td><td>Quem recebe dúvidas muito variadas e precisa de linguagem natural e persuasão em vendas.</td></tr>
+  <tr><td>BD próprio</td><td>O cliente fornece as respostas e nós estruturamos.</td><td>O cliente fornece manuais, PDFs e dados.</td></tr>
+  <tr><td>BD criado</td><td>Você entrega a base do nicho pré-configurada.</td><td>Você entrega a base do nicho pré-treinada.</td></tr>
+  <tr><td>Atendimento humano</td><td colspan="2">Painel para a equipe do cliente assumir a conversa quando alguém pede uma pessoa.</td></tr>
+  <tr><td>Recorrência</td><td colspan="2">Mensalidade inclui a curadoria da fila de treino: as perguntas não respondidas viram respostas toda semana.</td></tr>
+  </tbody></table></div>
+  <div class="grid g4" style="margin-bottom:16px">${card('A_proprio','Opção A','Bot ML + BD próprio','a')}${card('A_criado','Opção A','Bot ML + BD criado','a')}${card('B_proprio','Opção B','Bot + IA + BD próprio','b')}${card('B_criado','Opção B','Bot + IA + BD criado','b')}</div>
+  <div class="grid g2">
+    <div class="card"><div class="card-h"><h3>Projeto piloto</h3></div><div class="card-b" style="display:flex;flex-direction:column;gap:10px">
+      <p class="small muted">Empresa parceira com desconto em troca de usar os atendimentos reais para calibrar a base. Com os cases rodando, a venda no mesmo segmento fica muito mais fácil.</p>
+      <label class="f">Desconto do piloto (%)<input class="inp" type="number" min="0" max="100" value="${P.descontoPiloto}" data-preco="descontoPiloto" style="max-width:140px"></label>
+      <div class="small">Pilotos ativos: ${S.empresas.filter(c => c.piloto).map(c => `<span class="tag warn">${esc(c.nome)}</span>`).join(' ') || 'nenhum'}</div>
+    </div></div>
+    <div class="card"><div class="card-h"><h3>Gerar proposta</h3><select class="inp" style="margin-left:auto;max-width:220px" data-chg="propEmpresa">${opcoesEmpresas(ui.propEmpresa)}</select></div>
+      <div class="card-b"><textarea class="inp" id="propTxt" style="min-height:260px;font-size:12.5px">${esc(textoProposta(emp(ui.propEmpresa)))}</textarea><div class="row" style="margin-top:10px"><button class="btn sm pri" data-act="copiarProposta">📋 Copiar</button><span class="small faint">Edite à vontade antes de enviar.</span></div></div></div>
+  </div>`;
+}
+function textoProposta(c){
+  if (!c) return 'Cadastre um cliente para gerar a proposta.';
+  const P = S.ajustes.precos[`${c.plano}_${c.bd}`], kit = kitDe(c), d = c.piloto ? S.ajustes.precos.descontoPiloto / 100 : 0;
+  const f = v => brl(v * (1 - d));
+  return `PROPOSTA — Atendimento automatizado
+Cliente: ${c.nome}
+Segmento: ${kit?.nome || '—'}
+
+PLANO: ${c.plano === 'B' ? 'Opção B — Bot de respostas automáticas + IA humanizada' : 'Opção A — Bot de respostas automáticas com machine learning supervisionado'}
+BANCO DE DADOS: ${c.bd === 'criado' ? `Base desenvolvida por nós — kit ${kit?.nome || ''} já pronto com ${kit?.entradas.length || 0} assuntos e ${kit?.entradas.reduce((s, e) => s + e.perguntas.length, 0) || 0} formas de perguntar. Só ajustamos seus preços, horários e dados.` : 'Base própria — vocês fornecem as informações e nós estruturamos no sistema.'}
+CANAL: Chat no seu site (balão flutuante) e link direto para divulgar nas redes.
+
+O QUE ESTÁ INCLUSO
+• ${c.plano === 'B' ? 'Conversa natural: entende gírias, mensagens longas e contexto, usando apenas as informações aprovadas da sua empresa.' : 'Respostas 100% previsíveis: o bot responde apenas o que foi aprovado — sem “inventar”.'}
+• Atendimento 24h para dúvidas frequentes: horários, endereço, preços, pagamento${kit?.id === 'alimentacao' ? ', cardápio e entregas' : kit?.id === 'comercio' ? ', catálogo, frete e trocas' : kit?.id === 'servicos' ? ', orçamentos, prazos e garantia' : ''}.
+• Painel de atendimento para a sua equipe assumir a conversa quando o cliente pedir uma pessoa, com aviso sonoro.
+• Curadoria contínua: toda semana revisamos as perguntas que o bot não soube responder e atualizamos a base.
+• Relatório mensal: assuntos mais perguntados e taxa de resolução automática.
+
+INVESTIMENTO
+Implantação: ${f(P.setup)}${d ? ` (de ${brl(P.setup)})` : ''}
+Mensalidade (sistema + curadoria): ${f(P.mensal)}${d ? ` (de ${brl(P.mensal)})` : ''}
+${c.piloto ? `\nCondição especial de PROJETO PILOTO: ${S.ajustes.precos.descontoPiloto}% de desconto em troca de usarmos os atendimentos (anonimizados) para calibrar a base do segmento.\n` : ''}
+Prazo de implantação: ${c.bd === 'criado' ? 'até 3 dias úteis' : 'até 7 dias úteis após o envio das informações'}.`;
+}
+
+/* ── Configurações ─────────────────────── */
+function vConfig(){
+  const s = ui.iaStatus;
+  $('#view').innerHTML = `<div class="grid g2">
+  <div class="card"><div class="card-h"><h3>⚙️ Motor determinístico</h3></div><div class="card-b" style="display:flex;flex-direction:column;gap:12px">
+    <label class="f">Limiar de confiança: <b id="limVal" style="color:var(--text)">${pct(S.ajustes.limiar)}</b><input type="range" min="0.25" max="0.8" step="0.01" value="${S.ajustes.limiar}" id="cfLim"></label>
+    <p class="small muted">Abaixo desse valor o bot não arrisca: oferece sugestões ou responde a mensagem padrão e manda a pergunta para a fila de treino. Mais alto = mais conservador (mais itens na fila); mais baixo = responde mais, com mais risco de errar. Vale para todos os clientes na hora.</p>
+  </div></div>
+  <div class="card"><div class="card-h"><h3>✨ IA generativa (Opção B)</h3></div><div class="card-b" style="display:flex;flex-direction:column;gap:12px">
+    <p class="small muted">A chave da IA fica guardada no servidor (segredos da Edge Function), nunca no navegador. Sem chave, clientes da Opção B são atendidos pelo motor determinístico.</p>
+    <div class="row"><button class="btn sm" data-act="testarIA">🔌 Testar IA</button><span class="small" id="iaSt">${s ? (s.configurada ? `✅ ${esc(s.provider)} · ${esc(s.model)} · respondeu “${esc(s.resposta)}” em ${s.ms} ms` : '⚠️ IA não configurada') : ''}</span></div>
+    <details><summary class="small" style="cursor:pointer;font-weight:700">Como configurar</summary><p class="small muted" style="margin:8px 0">Supabase → Edge Functions → Secrets (ou pelo terminal):</p><pre class="code">npx supabase secrets set IA_PROVIDER=openrouter IA_API_KEY=sua-chave IA_MODEL=google/gemini-2.5-flash</pre><p class="small muted" style="margin-top:8px">Para produção use um modelo pago barato: os gratuitos têm limite diário baixo e saem do ar sem aviso.</p></details>
+  </div></div>
+  <div class="card"><div class="card-h"><h3>🔗 As três pontas</h3></div><div class="card-b" style="display:flex;flex-direction:column;gap:8px">
+    <div class="small"><b>Chat do consumidor:</b> <span class="mono">index.html?c=endereco-do-cliente</span> — link direto ou widget no site do cliente.</div>
+    <div class="small"><b>Painel da empresa:</b> <a href="painel.html" target="_blank">painel.html</a> — conversas ao vivo e atendimento humano. Crie os acessos em Clientes → Acessos.</div>
+    <div class="small"><b>Admin:</b> esta tela.</div>
+    ${CFG.CHAT_URL ? `<div class="small faint">Endereço público configurado: ${esc(CFG.CHAT_URL)}</div>` : `<div class="note warn small">Quando publicar os arquivos, preencha <b>CHAT_URL</b> no config.js para os links e o widget usarem o endereço público.</div>`}
+  </div></div>
+  <div class="card"><div class="card-h"><h3>💾 Backup e dados</h3></div><div class="card-b" style="display:flex;flex-direction:column;gap:12px">
+    <p class="small muted">${S.empresas.length} clientes · ${Object.values(S.base).reduce((s, b) => s + b.length, 0)} respostas · ${S.fila.filter(f => f.status === 'pendente').length} pendentes na fila.</p>
+    <div class="row"><button class="btn sm" data-act="exportarTudo">⬇ Exportar backup completo (.json)</button></div>
+    <div class="row"><button class="btn sm" data-act="criarExemplos">Criar clientes de exemplo</button><button class="btn sm danger" data-act="limparExemplos">Remover dados de exemplo</button></div>
+  </div></div></div>`;
+  $('#cfLim').oninput = e => { $('#limVal').textContent = pct(+e.target.value); };
+  $('#cfLim').onchange = async e => { try { must(await sb.from('ajustes').update({ limiar: +e.target.value }).eq('id', 1)); S.ajustes.limiar = +e.target.value; toast('Limiar salvo'); } catch (err) { erro(err); } };
+}
+function baixar(nome, obj){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' })); a.download = nome; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
+function escolherArquivo(cb){ const i = document.createElement('input'); i.type = 'file'; i.accept = '.json,application/json'; i.onchange = () => { const f = i.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { try { cb(JSON.parse(r.result)); } catch (e) { toast('Arquivo inválido'); } }; r.readAsText(f); }; i.click(); }
+
+/* ═══════════════════════════════════════════════════════════════
+   AÇÕES (delegação de eventos)
+   ═══════════════════════════════════════════════════════════════ */
+const A = {
+  tema(){ const r = document.documentElement; const dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; r.dataset.theme = dark ? 'light' : 'dark'; try { localStorage.setItem(THEME_KEY, r.dataset.theme); } catch (e) {} },
+  sair, fecharModal,
+  copiarTxt(el){ copiar(el.dataset.txt); },
+  toggleDebug(){ ui.debug = !ui.debug; render(); },
+  novaConversaTeste(){ const f = $('#chatFrame'); if (f) f.contentWindow.postMessage({ tipo: 'sm-nova' }, '*'); ui.ultimaAnalise = null; renderDebug(); },
+  escolherEmpresa(el){ ui.empresaAtiva = el.dataset.id; ui.ultimaAnalise = null; render(); },
+  irFila(el){ ui.filaEmpresa = el.dataset.id; ir('fila'); },
+  verWidget(el){ const c = emp(el.dataset.id); abrirModal(`Link e widget · ${esc(c.nome)}`, `
+    <label class="f">Link direto <span class="hint">— para bio do Instagram, Google Meu Negócio, QR code no balcão…</span><div class="link-box"><input class="inp" readonly value="${esc(linkChat(c))}"><button class="btn sm" data-act="copiarTxt" data-txt="${esc(linkChat(c))}">Copiar</button></div></label>
+    <label class="f">Widget para o site <span class="hint">— cole antes do &lt;/body&gt; do site do cliente</span><pre class="code">${esc(codigoWidget(c))}</pre></label>
+    <div class="row"><button class="btn sm" data-act="copiarTxt" data-txt="${esc(codigoWidget(c))}">Copiar código do widget</button></div>
+    ${CFG.CHAT_URL ? '' : '<div class="note warn small">Estes endereços usam o local atual. Depois de publicar os arquivos, preencha <b>CHAT_URL</b> no config.js.</div>'}`); },
+  /* fila */
+  async atualizarFila(el){ await ocupado(el, async () => { await recarregarFila(); render(); }); },
+  filaAbrir(el){ filaAbrir(el.dataset.id, el.dataset.modo); },
+  filaFechar(el){ const b = $('#qr_' + el.dataset.id); b.classList.remove('show'); b.innerHTML = ''; },
+  async filaIgnorar(el){ await ocupado(el, async () => { const f = S.fila.find(x => x.id === el.dataset.id); const upd = { status: 'ignorada', resolvido_em: new Date().toISOString() }; must(await sb.from('fila').update(upd).eq('id', f.id)); Object.assign(f, upd); render(); }); },
+  async filaVincular(el){ await ocupado(el, async () => { const f = S.fila.find(x => x.id === el.dataset.id), e = (S.base[f.empresa_id] || []).find(x => x.id === el.dataset.e); await adicionarVariacoes(e, [f.pergunta, ...(f.variacoes || [])]); await filaResolver(f, e); }); },
+  async filaVincularSel(el){ await ocupado(el, async () => { const f = S.fila.find(x => x.id === el.dataset.id), e = (S.base[f.empresa_id] || []).find(x => x.id === $('#qv_' + f.id).value); await adicionarVariacoes(e, [f.pergunta, ...(f.variacoes || [])]); await filaResolver(f, e); }); },
+  async filaSalvarNova(el){
+    const f = S.fila.find(x => x.id === el.dataset.id), resp = $('#qa_' + f.id).value.trim(); if (!resp) return toast('Escreva a resposta');
+    if (/\[PREENCHER/i.test(resp)) return toast('Complete os trechos [PREENCHER: …] antes de salvar');
+    await ocupado(el, async () => {
+      const row = { empresa_id: f.empresa_id, intencao: $('#qi_' + f.id).value.trim() || sugerirIntencao(f.pergunta), categoria: $('#qc_' + f.id).value.trim() || 'Geral', perguntas: [f.pergunta, ...(f.variacoes || [])], resposta: resp, humano: false, origem: 'curadoria' };
+      const e = must(await sb.from('respostas').insert(row).select().single());
+      (S.base[f.empresa_id] || (S.base[f.empresa_id] = [])).push(e);
+      await filaResolver(f, e);
+    });
+  },
+  async filaSugerirIA(el){
+    const f = S.fila.find(x => x.id === el.dataset.id), ta = $('#qa_' + f.id);
+    await ocupado(el, async () => { const r = await smChamar(sb, 'rascunho_ia', { empresa_id: f.empresa_id, pergunta: f.pergunta, variacoes: f.variacoes || [] }); ta.value = r.texto; ta.focus(); });
+  },
+  inserirVar(el){ const t = $('#' + el.dataset.alvo); if (!t) return; const s = t.selectionStart ?? t.value.length; const ins = `{{${el.dataset.v}}}`; t.value = t.value.slice(0, s) + ins + t.value.slice(t.selectionEnd ?? s); t.focus(); t.selectionStart = t.selectionEnd = s + ins.length; },
+  /* base */
+  novaEntrada(){ if (!S.empresas.length) return toast('Cadastre um cliente primeiro'); if (!emp(ui.baseEmpresa)) ui.baseEmpresa = ui.empresaAtiva; if (ui.view !== 'base') ir('base'); abrirEntrada(null); },
+  editarEntrada(el){ abrirEntrada(el.dataset.id); },
+  async salvarEntrada(el){
+    const c = emp(ui.baseEmpresa), base = S.base[c.id], id = el.dataset.id;
+    const per = $('#fePer').value.split('\n').map(s => s.trim()).filter(Boolean), res = $('#feRes').value.trim();
+    if (!per.length || !res) return toast('Informe ao menos uma pergunta e a resposta');
+    const dados = { intencao: $('#feInt').value.trim() || sugerirIntencao(per[0]), categoria: $('#feCat').value.trim() || 'Geral', perguntas: per, resposta: res, humano: $('#feHum').checked, atualizado_em: new Date().toISOString() };
+    await ocupado(el, async () => {
+      if (id) { const r = must(await sb.from('respostas').update(dados).eq('id', id).select().single()); Object.assign(base.find(x => x.id === id), r); }
+      else base.push(must(await sb.from('respostas').insert({ ...dados, empresa_id: c.id, origem: 'cliente' }).select().single()));
+      fecharModal(); render(); toast('Resposta salva');
+    });
+  },
+  async excluirEntrada(el){ if (!confirm('Excluir esta resposta da base?')) return; await ocupado(el, async () => { must(await sb.from('respostas').delete().eq('id', el.dataset.id)); const c = emp(ui.baseEmpresa); S.base[c.id] = S.base[c.id].filter(x => x.id !== el.dataset.id); render(); }); },
+  async testarBase(el){
+    const c = emp(ui.baseEmpresa), t = $('#testeIn').value.trim(); if (!t) return;
+    await ocupado(el, async () => {
+      const r = await smChamar(sb, 'analisar', { empresa_id: c.id, texto: t, n: 3 }), lim = r.limiar, top = r.top;
+      $('#testeOut').innerHTML = top.length ? top.map((m, i) => `<div style="margin-top:6px">${i === 0 && m.score >= lim ? '✅' : m.score >= lim * 0.6 ? '🟡' : '⚪'} <b>${esc(m.intencao)}</b> <span class="mono">${pct(m.score)}</span> <span class="faint">≈ “${esc(m.pat)}”</span></div>`).join('') + (top[0].score < lim ? `<div class="faint" style="margin-top:6px">Abaixo do limiar (${pct(lim)}): o bot enviaria essa pergunta para a fila de treino.</div>` : '') : 'Base vazia.';
+    });
+  },
+  async aplicarKit(el){
+    const c = emp(el.dataset.id), base = S.base[c.id] || (S.base[c.id] = []), ints = new Set(base.map(e => e.intencao));
+    const novos = respostasDoKit(c.nicho, c.id).filter(e => !ints.has(e.intencao));
+    if (!novos.length) return toast('A base já tem todas as intenções do kit');
+    await ocupado(el, async () => { base.push(...must(await sb.from('respostas').insert(novos).select())); render(); toast(`${novos.length} respostas do kit adicionadas`); });
+  },
+  exportarBase(){ const c = emp(ui.baseEmpresa); if (!c) return; baixar(`base-${c.slug}.json`, { cliente: c.nome, nicho: c.nicho, entradas: (S.base[c.id] || []).map(({ intencao, categoria, perguntas, resposta, humano, origem }) => ({ intencao, categoria, perguntas, resposta, humano, origem })) }); },
+  importarBase(){ const c = emp(ui.baseEmpresa); if (!c) return; escolherArquivo(async d => {
+    const ent = Array.isArray(d) ? d : d.entradas; if (!Array.isArray(ent)) return toast('Formato não reconhecido');
+    const rows = ent.filter(e => e && e.resposta && Array.isArray(e.perguntas) && e.perguntas.length).map(e => ({ empresa_id: c.id, intencao: e.intencao || sugerirIntencao(e.perguntas[0]), categoria: e.categoria || 'Geral', perguntas: e.perguntas, resposta: e.resposta, humano: !!e.humano, origem: ['kit','cliente','curadoria'].includes(e.origem) ? e.origem : 'cliente' }));
+    if (!rows.length) return toast('Nada para importar');
+    try { S.base[c.id].push(...must(await sb.from('respostas').insert(rows).select())); render(); toast(`${rows.length} respostas importadas`); } catch (e) { erro(e); }
+  }); },
+  /* clientes */
+  novoCliente(){ abrirCliente(null); },
+  editarCliente(el){ abrirCliente(el.dataset.id); },
+  async salvarCliente(el){
+    const id = el.dataset.id, nome = $('#fcNome').value.trim(); if (!nome) return toast('Informe o nome');
+    const slug = slugDe($('#fcSlug').value || nome);
+    if (!/^[a-z0-9][a-z0-9-]{2,39}$/.test(slug)) return toast('Endereço do chat precisa ter de 3 a 40 letras/números');
+    const vars = {}; document.querySelectorAll('.fcVar').forEach(t => { if (t.value.trim()) vars[t.dataset.k] = t.value.trim(); });
+    if (!vars.empresa) vars.empresa = nome;
+    const dados = { nome, slug, nicho: $('#fcNicho').value, plano: $('#fcPlano').value, tom: $('#fcTom').value, cor: $('#fcCor').value, ativo: $('#fcAtivo').checked, piloto: $('#fcPiloto').checked, saudacao: $('#fcSaud').value.trim() || null, vars };
+    await ocupado(el, async () => {
+      try {
+        if (id) Object.assign(emp(id), must(await sb.from('empresas').update(dados).eq('id', id).select().single()));
+        else { const c = await criarEmpresa({ ...dados, bd: $('#fcBd').value }); ui.empresaAtiva = c.id; }
+      } catch (e) { if (/duplicate|unique/i.test(e.message)) throw new Error('Esse endereço de chat já está em uso. Escolha outro.'); throw e; }
+      fecharModal(); render(); toast('Cliente salvo');
+    });
+  },
+  async excluirCliente(el){
+    const c = emp(el.dataset.id);
+    if (prompt(`Isso apaga ${c.nome} com toda a base, conversas, fila e acessos. Digite o endereço do chat (${c.slug}) para confirmar:`) !== c.slug) return;
+    await ocupado(el, async () => {
+      for (const a of S.acessos.filter(x => x.empresa_id === c.id)) { try { await smChamar(sb, 'remover_acesso', { user_id: a.user_id }); } catch (e) { console.warn(e); } }
+      must(await sb.from('empresas').delete().eq('id', c.id));
+      S.empresas = S.empresas.filter(x => x.id !== c.id); delete S.base[c.id]; S.fila = S.fila.filter(f => f.empresa_id !== c.id); S.acessos = S.acessos.filter(a => a.empresa_id !== c.id);
+      if (ui.empresaAtiva === c.id) ui.empresaAtiva = S.empresas[0]?.id || null;
+      fecharModal(); render();
+    });
+  },
+  verAcessos(el){ modalAcessos(el.dataset.id); },
+  async criarAcesso(el){
+    const id = el.dataset.id, email = $('#acEmail').value.trim(), senha = $('#acSenha').value, nome = $('#acNome').value.trim();
+    if (!email || senha.length < 8) return toast('Informe o e-mail e uma senha com pelo menos 8 caracteres');
+    await ocupado(el, async () => { await smChamar(sb, 'criar_acesso', { empresa_id: id, email, senha, nome }); S.acessos = must(await sb.from('perfis').select('*').eq('papel', 'empresa')); modalAcessos(id); toast('Acesso criado'); });
+  },
+  async removerAcesso(el){ if (!confirm('Remover este acesso ao painel?')) return; await ocupado(el, async () => { await smChamar(sb, 'remover_acesso', { user_id: el.dataset.id }); S.acessos = S.acessos.filter(a => a.user_id !== el.dataset.id); modalAcessos(el.dataset.emp); }); },
+  abrirAtendimento(el){ ui.empresaAtiva = el.dataset.id; ui.ultimaAnalise = null; ir('atendimento'); },
+  verBase(el){ ui.baseEmpresa = el.dataset.id; ui.baseBusca = ''; ir('base'); },
+  verProposta(el){ ui.propEmpresa = el.dataset.id; ir('planos'); },
+  async criarExemplos(el){
+    if (!confirm('Criar 3 clientes de exemplo (um por nicho) para demonstração?')) return;
+    await ocupado(el, async () => {
+      const demo = [
+        { nome:'TecCell Assistência', slug:'teccell-demo', nicho:'servicos', plano:'A', piloto:true, tom:'cordial', cor:'#2563eb' },
+        { nome:'Estilo Urbano Moda', slug:'estilo-urbano-demo', nicho:'comercio', plano:'B', piloto:true, tom:'descontraído', cor:'#db2777' },
+        { nome:'Sabor da Casa Delivery', slug:'sabor-da-casa-demo', nicho:'alimentacao', plano:'A', piloto:true, tom:'descontraído', cor:'#ea580c' },
+      ];
+      for (const d of demo) {
+        if (S.empresas.some(e => e.slug === d.slug)) continue;
+        await criarEmpresa({ ...d, bd: 'criado', exemplo: true, vars: varsExemplo(d.nicho, { empresa: d.nome }) });
+      }
+      ui.empresaAtiva = S.empresas[0]?.id; render(); toast('Clientes de exemplo criados');
+    });
+  },
+  async limparExemplos(el){
+    if (!confirm('Remover os clientes de exemplo (com conversas, base e fila deles)?')) return;
+    await ocupado(el, async () => {
+      const ids = S.empresas.filter(c => c.exemplo).map(c => c.id);
+      for (const a of S.acessos.filter(x => ids.includes(x.empresa_id))) { try { await smChamar(sb, 'remover_acesso', { user_id: a.user_id }); } catch (e) { console.warn(e); } }
+      must(await sb.from('empresas').delete().eq('exemplo', true)); must(await sb.from('fila').delete().eq('exemplo', true)); await carregarTudo(); render(); toast('Dados de exemplo removidos'); });
+  },
+  /* kits */
+  verKit(el){ ui.kitAberto = ui.kitAberto === el.dataset.id ? null : el.dataset.id; render(); },
+  exportarKit(el){ baixar(`kit-${el.dataset.id}.json`, S.kits[el.dataset.id]); },
+  async promoverKit(el){
+    const c = emp($('#kitDeEmpresa').value); if (!c) return; const kit = clone(S.kits[c.nicho]); if (!kit) return toast('Cliente sem kit');
+    let n = 0;
+    for (const e of S.base[c.id] || []) {
+      const ex = kit.entradas.find(k => k.intencao === e.intencao);
+      if (ex) e.perguntas.forEach(p => { if (!ex.perguntas.some(x => norm(x) === norm(p))) { ex.perguntas.push(p); n++; } });
+      else if (e.origem === 'curadoria') { kit.entradas.push({ intencao: e.intencao, categoria: e.categoria, perguntas: [...e.perguntas], resposta: e.resposta, humano: e.humano }); n++; }
+    }
+    if (!n) return toast('Nada novo para levar ao kit');
+    await ocupado(el, async () => { must(await sb.from('kits').update({ dados: kit, atualizado_em: new Date().toISOString() }).eq('id', kit.id)); S.kits[kit.id] = kit; render(); toast(`Kit ${kit.nome} atualizado (${n} itens)`); });
+  },
+  async restaurarKits(el){ if (!confirm('Voltar os 3 kits ao conteúdo original? (as bases dos clientes não mudam)')) return; await ocupado(el, async () => { await instalarKits(); render(); }); },
+  /* relatórios / planos */
+  relPeriodo(el){ ui.relPeriodo = +el.dataset.id; render(); },
+  copiarProposta(){ copiar($('#propTxt').value); },
+  /* config */
+  async testarIA(el){ await ocupado(el, async () => { try { ui.iaStatus = await smChamar(sb, 'testar_ia'); } catch (e) { ui.iaStatus = null; $('#iaSt').textContent = '❌ ' + e.message; return; } render(); }); },
+  async exportarTudo(el){
+    await ocupado(el, async () => {
+      const tabelas = ['empresas','respostas','fila','kits','ajustes','conversas','mensagens'], out = { exportado_em: new Date().toISOString() };
+      for (const t of tabelas) out[t] = await paginar(() => sb.from(t).select('*').order('id'));
+      baixar(`suporte-multiplataforma-backup-${new Date().toISOString().slice(0, 10)}.json`, out);
+    });
+  },
+};
+const CHG = {
+  filaEmpresa(v){ ui.filaEmpresa = v; render(); },
+  baseEmpresa(v){ ui.baseEmpresa = v; render(); },
+  relEmpresa(v){ ui.relEmpresa = v; render(); },
+  propEmpresa(v){ ui.propEmpresa = v; $('#propTxt').value = textoProposta(emp(v)); },
+  fcNicho(v){ const cur = {}; document.querySelectorAll('.fcVar').forEach(t => cur[t.dataset.k] = t.value); $('#fcVars').innerHTML = camposVars(v, cur); },
+};
+document.addEventListener('click', e => {
+  const nav = e.target.closest('#nav button[data-view]'); if (nav) { ir(nav.dataset.view); return; }
+  const el = e.target.closest('[data-act]'); if (el && A[el.dataset.act]) { e.preventDefault(); A[el.dataset.act](el); }
+  if (e.target.id === 'modalBg') fecharModal();
+});
+document.addEventListener('change', async e => {
+  const el = e.target;
+  if (el.dataset.chg && CHG[el.dataset.chg]) CHG[el.dataset.chg](el.value);
+  if (el.dataset.preco) {
+    const [k, f] = el.dataset.preco.split('.'), v = Math.max(0, +el.value || 0), P = clone(S.ajustes.precos);
+    if (f) P[k][f] = v; else P[k] = v;
+    try { must(await sb.from('ajustes').update({ precos: P }).eq('id', 1)); S.ajustes.precos = P; const y = $('#view').scrollTop; render(); $('#view').scrollTop = y; } catch (err) { erro(err); }
+  }
+});
+document.addEventListener('input', e => {
+  if (e.target.dataset.inp === 'baseBusca') { ui.baseBusca = e.target.value; const pos = e.target.selectionStart; vBase(); const i = document.querySelector('[data-inp="baseBusca"]'); i.focus(); i.selectionStart = i.selectionEnd = pos; }
+  if (e.target.dataset.inp === 'fcNome') { const s = $('#fcSlug'); if (s && !s.dataset.editado) s.value = slugDe(e.target.value); }
+  if (e.target.id === 'fcSlug') e.target.dataset.editado = '1';
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
+
+iniciar();
+</script>
+</body>
+</html>

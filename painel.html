@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Atendimento</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6fa; --surface:#ffffff; --surface-2:#f0f2f8; --text:#151a2d; --muted:#5b6278; --faint:#8a90a6; --border:#e2e5ee;
+  --accent:#4f46e5; --accent-strong:#4338ca; --accent-soft:#eef0ff;
+  --human:#0f8f84; --human-soft:#e4f5f3; --warn:#b45309; --warn-soft:#fdf3e2; --err:#c62828; --err-soft:#fdecec; --ok:#15803d; --ok-soft:#e7f6ec;
+  --shadow:0 1px 2px rgba(20,25,45,.06),0 4px 16px rgba(20,25,45,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1020; --surface:#151a2c; --surface-2:#1c2238; --text:#e8eaf4; --muted:#a3a9be; --faint:#7a809a; --border:#2a3150;
+    --accent:#8b85ff; --accent-strong:#a39eff; --accent-soft:#23264a;
+    --human:#2cc9b8; --human-soft:#10332f; --warn:#fbbf24; --warn-soft:#352812; --err:#f87171; --err-soft:#3a1818; --ok:#4ade80; --ok-soft:#12301d;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d1020; --surface:#151a2c; --surface-2:#1c2238; --text:#e8eaf4; --muted:#a3a9be; --faint:#7a809a; --border:#2a3150;
+  --accent:#8b85ff; --accent-strong:#a39eff; --accent-soft:#23264a;
+  --human:#2cc9b8; --human-soft:#10332f; --warn:#fbbf24; --warn-soft:#352812; --err:#f87171; --err-soft:#3a1818; --ok:#4ade80; --ok-soft:#12301d;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 16px rgba(0,0,0,.25);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:var(--surface);padding:7px 13px;border-radius:9px;font-weight:600;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent-strong)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.pri:hover{background:var(--accent-strong);color:#fff}
+.btn.hum{background:var(--human);border-color:var(--human);color:#fff}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:8px}
+.btn.ghost{border-color:transparent;background:none}
+.btn:disabled{opacity:.5;cursor:default}
+.inp{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface);outline:none;font-size:14px}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.tag.espera{background:var(--warn-soft);color:var(--warn)} .tag.humano{background:var(--human-soft);color:var(--human)}
+.tag.bot{background:var(--accent-soft);color:var(--accent-strong)} .tag.fim{background:var(--surface-2);color:var(--faint)}
+.tag.err{background:var(--err-soft);color:var(--err)} .tag.ok{background:var(--ok-soft);color:var(--ok)}
+
+/* login */
+.login{min-height:100%;display:flex;align-items:center;justify-content:center;padding:20px}
+.login form{width:min(380px,100%);background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:28px;display:flex;flex-direction:column;gap:14px}
+.login h1{font-size:19px;font-weight:800}
+.login p{font-size:13px;color:var(--muted)}
+.login .err{color:var(--err);font-size:12.5px;min-height:18px}
+
+/* app */
+.app{display:grid;grid-template-rows:auto 1fr;height:100vh;height:100dvh}
+.top{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.top .mark{width:34px;height:34px;border-radius:10px;background:var(--human);color:#fff;display:grid;place-items:center;font-size:17px}
+.top h1{font-size:15px;font-weight:800;line-height:1.2}
+.top small{font-size:12px;color:var(--muted)}
+.top .grow{flex:1;min-width:0}
+.top select{max-width:240px}
+.body{display:grid;grid-template-columns:360px 1fr;min-height:0}
+.lista{border-right:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;min-height:0}
+.abas{display:flex;gap:0;padding:10px 8px 0;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none}
+.abas::-webkit-scrollbar{display:none}
+.abas button{border:none;background:none;padding:8px 8px;font-size:12.5px;font-weight:700;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap}
+.abas button.on{color:var(--text);border-color:var(--accent)}
+.abas .n{background:var(--err);color:#fff;border-radius:10px;font-size:10px;padding:0 6px;margin-left:4px}
+.abas .n:empty{display:none}
+.busca{padding:10px 12px}
+.convs{flex:1;overflow-y:auto}
+.cv{display:flex;flex-direction:column;gap:3px;padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;border-left:3px solid transparent}
+.cv:hover{background:var(--surface-2)}
+.cv.on{background:var(--accent-soft);border-left-color:var(--accent)}
+.cv.espera{border-left-color:var(--warn)}
+.cv .l1{display:flex;align-items:center;gap:8px}
+.cv .l1 b{flex:1;min-width:0;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv .l1 time{font-size:11px;color:var(--faint)}
+.cv .l2{display:flex;align-items:center;gap:8px}
+.cv .l2 span.txt{flex:1;min-width:0;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv .unread{background:var(--accent);color:#fff;border-radius:10px;font-size:10.5px;font-weight:700;padding:0 7px}
+.vazio{text-align:center;color:var(--muted);padding:40px 20px;font-size:13px}
+.vazio .big{font-size:34px;margin-bottom:6px}
+
+.det{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--surface-2)}
+.det-h{display:flex;align-items:center;gap:12px;padding:12px 18px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.det-h .who{flex:1;min-width:0}
+.det-h b{font-size:15px}
+.det-h small{display:block;font-size:12px;color:var(--muted)}
+.voltar{display:none}
+.msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:8px}
+.m{max-width:72%;padding:8px 12px;border-radius:13px;font-size:13.5px;word-wrap:break-word}
+.m.cliente{align-self:flex-start;background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px}
+.m.bot{align-self:flex-end;background:var(--accent-soft);border-bottom-right-radius:4px}
+.m.atendente{align-self:flex-end;background:var(--human);color:#fff;border-bottom-right-radius:4px}
+.m.sistema{align-self:center;background:none;color:var(--muted);font-size:12px;text-align:center;max-width:90%}
+.m .quem{font-size:10.5px;font-weight:700;opacity:.75;margin-bottom:2px}
+.m .rod{display:flex;gap:6px;align-items:center;justify-content:flex-end;font-size:10.5px;opacity:.65;margin-top:4px;flex-wrap:wrap}
+.m a{color:inherit}
+.comp{display:flex;gap:8px;align-items:flex-end;padding:12px 16px;background:var(--surface);border-top:1px solid var(--border)}
+.comp textarea{flex:1;resize:none;border:1px solid var(--border);background:var(--surface-2);border-radius:12px;padding:10px 13px;outline:none;max-height:140px;min-height:42px}
+.comp textarea:focus{border-color:var(--human)}
+.dica{font-size:11.5px;color:var(--muted);padding:6px 16px 0;background:var(--surface)}
+.nada{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:6px;text-align:center;padding:30px}
+.nada .big{font-size:42px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:600;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:99}
+.toast.show{opacity:1;transform:translateX(-50%)}
+@media (max-width:820px){
+  .body{grid-template-columns:1fr}
+  .det{display:none}
+  .app.aberta .lista{display:none}
+  .app.aberta .det{display:flex}
+  .voltar{display:inline-flex}
+  .m{max-width:88%}
+  .top{padding:10px 14px}
+}
+</style>
+</head>
+<body>
+<div id="raiz"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+const CFG = window.SM_CONFIG || {};
+const $ = s => document.querySelector(s);
+let sb, perfil = null, empresas = [], empresaSel = '', convs = [], abertaId = null, msgsAbertas = [], aba = 'humano', busca = '', canal = null, mostrarTeste = false;
+const somAtivo = { v: true };
+
+function esc(s){return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function fmt(t){return esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<b>$1</b>').replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/\n/g,'<br>')}
+function quando(ts){const d=new Date(ts),h=new Date();return d.toDateString()===h.toDateString()?d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600)}
+const STATUS = { aguardando_humano:['espera','⏳ Aguardando você'], humano:['humano','👤 Em atendimento'], bot:['bot','🤖 Com o bot'], encerrada:['fim','Encerrada'] };
+const nomeConv = c => c.visitante_nome || ('Visitante ' + c.id.slice(0, 4).toUpperCase());
+const nomeEmp = id => empresas.find(e => e.id === id)?.nome || '';
+
+/* ── Sessão ─────────────────────────────── */
+async function iniciar(){
+  if (!window.smConfigurado || !smConfigurado()) { $('#raiz').innerHTML = `<div class="login"><form><h1>Configuração pendente</h1><p>Preencha o arquivo <b>config.js</b> com os dados do seu projeto Supabase.</p></form></div>`; return; }
+  sb = supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_KEY);
+  const { data: { session } } = await sb.auth.getSession();
+  if (session && !session.user.is_anonymous) await entrarComSessao(); else telaLogin();
+}
+function telaLogin(msg){
+  $('#raiz').innerHTML = `<div class="login"><form id="fLogin">
+    <div style="font-size:30px">💬</div><h1>Painel de Atendimento</h1><p>Acompanhe as conversas do seu chat e responda quando o cliente pedir uma pessoa.</p>
+    <input class="inp" id="lEmail" type="email" placeholder="E-mail" autocomplete="username" required>
+    <input class="inp" id="lSenha" type="password" placeholder="Senha" autocomplete="current-password" required>
+    <div class="err" id="lErr">${esc(msg || '')}</div>
+    <button class="btn pri" style="justify-content:center">Entrar</button></form></div>`;
+  $('#fLogin').onsubmit = async e => {
+    e.preventDefault(); $('#lErr').textContent = '';
+    const { error } = await sb.auth.signInWithPassword({ email: $('#lEmail').value.trim(), password: $('#lSenha').value });
+    if (error) { $('#lErr').textContent = /invalid/i.test(error.message) ? 'E-mail ou senha incorretos.' : error.message; return; }
+    entrarComSessao();
+  };
+  $('#lEmail').focus();
+}
+async function entrarComSessao(){
+  const { data: { user } } = await sb.auth.getUser();
+  const { data } = await sb.from('perfis').select('*').eq('user_id', user.id).maybeSingle();
+  if (!data) { await sb.auth.signOut(); return telaLogin('Este usuário não tem acesso ao painel. Fale com o administrador.'); }
+  perfil = data;
+  const q = sb.from('empresas').select('id,nome,slug').order('nome');
+  const { data: emps } = perfil.papel === 'admin' ? await q : await q.eq('id', perfil.empresa_id);
+  empresas = emps || [];
+  empresaSel = perfil.papel === 'admin' ? '' : perfil.empresa_id;
+  montar(); await carregarConversas(); assinar();
+  setInterval(carregarConversas, 60000); // reserva caso o tempo real caia
+}
+async function sair(){ await sb.auth.signOut(); location.reload(); }
+
+/* ── Layout ─────────────────────────────── */
+function montar(){
+  const admin = perfil.papel === 'admin';
+  $('#raiz').innerHTML = `<div class="app" id="app">
+    <div class="top">
+      <span class="mark">💬</span>
+      <div class="grow"><h1>${admin ? 'Painel de Atendimento · Admin' : esc(empresas[0]?.nome || 'Painel de Atendimento')}</h1><small>${esc(perfil.nome || '')} · respostas em tempo real</small></div>
+      ${admin ? `<select class="inp" id="selEmp"><option value="">Todas as empresas</option>${empresas.map(e => `<option value="${e.id}">${esc(e.nome)}</option>`).join('')}</select>
+        <label style="font-size:12px;display:flex;gap:5px;align-items:center"><input type="checkbox" id="chkTeste"> conversas de teste</label>` : ''}
+      <button class="btn sm" id="btnAlerta" title="Aviso sonoro e notificação quando alguém pedir atendimento">🔔 Alertas</button>
+      <button class="btn sm ghost" id="btnSair">Sair</button>
+    </div>
+    <div class="body">
+      <div class="lista">
+        <div class="abas" id="abas"></div>
+        <div class="busca"><input class="inp" id="busca" placeholder="🔍 Buscar por nome ou mensagem…"></div>
+        <div class="convs" id="convs"></div>
+      </div>
+      <div class="det" id="det"><div class="nada"><div class="big">💬</div><b>Selecione uma conversa</b><p>Conversas em que o cliente pediu atendimento aparecem em “Precisam de você”.</p></div></div>
+    </div></div>`;
+  $('#btnSair').onclick = sair;
+  $('#btnAlerta').onclick = ativarAlertas;
+  $('#busca').oninput = e => { busca = e.target.value.toLowerCase(); renderLista(); };
+  $('#abas').onclick = e => { const b = e.target.closest('button'); if (b) { aba = b.dataset.aba; renderLista(); } };
+  $('#convs').onclick = e => { const c = e.target.closest('[data-id]'); if (c) abrir(c.dataset.id); };
+  if (admin) {
+    $('#selEmp').onchange = e => { empresaSel = e.target.value; abertaId = null; fecharDetalhe(); carregarConversas(); assinar(); };
+    $('#chkTeste').onchange = e => { mostrarTeste = e.target.checked; carregarConversas(); };
+  }
+  atualizarBotaoAlerta();
+}
+
+async function carregarConversas(){
+  let q = sb.from('conversas').select('*').not('ultima_mensagem', 'is', null).order('atualizado_em', { ascending: false }).limit(300);
+  if (empresaSel) q = q.eq('empresa_id', empresaSel);
+  if (!mostrarTeste) q = q.eq('teste', false);
+  const { data, error } = await q;
+  if (error) { toast('Erro ao carregar conversas: ' + error.message); return; }
+  convs = data || []; renderLista();
+}
+
+function renderLista(){
+  const cont = { humano: convs.filter(c => c.status === 'aguardando_humano' || c.status === 'humano'), bot: convs.filter(c => c.status === 'bot'), encerrada: convs.filter(c => c.status === 'encerrada'), todas: convs };
+  const esperando = convs.filter(c => c.status === 'aguardando_humano').length;
+  $('#abas').innerHTML = [['humano','Precisam de você',esperando||''],['bot','Com o bot',''],['encerrada','Encerradas',''],['todas','Todas','']]
+    .map(([k,l,n]) => `<button data-aba="${k}" class="${aba === k ? 'on' : ''}">${l}<span class="n">${n}</span></button>`).join('');
+  let lista = cont[aba] || convs;
+  if (busca) lista = lista.filter(c => (nomeConv(c) + ' ' + (c.ultima_mensagem || '') + ' ' + (c.visitante_contato || '')).toLowerCase().includes(busca));
+  if (aba === 'humano') lista = lista.slice().sort((a, b) => (a.status === 'aguardando_humano' ? 0 : 1) - (b.status === 'aguardando_humano' ? 0 : 1));
+  $('#convs').innerHTML = lista.length ? lista.map(c => {
+    const [cls, lbl] = STATUS[c.status] || ['', c.status];
+    return `<div class="cv ${c.id === abertaId ? 'on' : ''} ${c.status === 'aguardando_humano' ? 'espera' : ''}" data-id="${c.id}">
+      <div class="l1"><b>${esc(nomeConv(c))}</b><time>${quando(c.atualizado_em)}</time></div>
+      <div class="l2"><span class="txt">${esc(c.ultima_mensagem || '')}</span>${c.nao_lidas ? `<span class="unread">${c.nao_lidas}</span>` : ''}</div>
+      <div class="l2"><span class="tag ${cls}">${lbl}</span>${!empresaSel && empresas.length > 1 ? `<span class="tag">${esc(nomeEmp(c.empresa_id))}</span>` : ''}${c.teste ? '<span class="tag">teste</span>' : ''}</div>
+    </div>`;
+  }).join('') : `<div class="vazio"><div class="big">${aba === 'humano' ? '🎉' : '📭'}</div>${aba === 'humano' ? 'Ninguém esperando por atendimento agora.' : 'Nenhuma conversa aqui.'}</div>`;
+  document.title = (esperando ? `(${esperando}) ` : '') + 'Painel de Atendimento';
+}
+
+/* ── Conversa aberta ────────────────────── */
+async function abrir(id){
+  abertaId = id; $('#app').classList.add('aberta'); renderLista();
+  $('#det').innerHTML = `<div class="nada"><p>Carregando…</p></div>`;
+  const { data, error } = await sb.from('mensagens').select('*').eq('conversa_id', id).order('id', { ascending: true }).limit(500);
+  if (error) { toast(error.message); return; }
+  if (abertaId !== id) return;
+  msgsAbertas = data || [];
+  const c = convs.find(x => x.id === id);
+  if (c && c.nao_lidas) { c.nao_lidas = 0; sb.from('conversas').update({ nao_lidas: 0 }).eq('id', id).then(() => {}); renderLista(); }
+  renderDetalhe(true);
+}
+function fecharDetalhe(){ abertaId = null; $('#app')?.classList.remove('aberta'); $('#det').innerHTML = `<div class="nada"><div class="big">💬</div><b>Selecione uma conversa</b></div>`; renderLista(); }
+
+function renderDetalhe(focar){
+  const c = convs.find(x => x.id === abertaId); if (!c) return;
+  const [cls, lbl] = STATUS[c.status] || ['', c.status];
+  const RES = { resolvido:['ok','resolvido'], fila:['err','sem resposta → fila'], sugestao:['espera','sugestões'], humano:['humano','→ humano'], saudacao:['','saudação'] };
+  const msgsHtml = msgsAbertas.map(m => {
+    if (m.autor === 'sistema') return `<div class="m sistema">${fmt(m.texto)}</div>`;
+    const quem = m.autor === 'cliente' ? '' : `<div class="quem">${m.autor === 'bot' ? '🤖 Bot' : '👤 ' + esc(m.autor_nome || 'Atendente')}</div>`;
+    const r = m.autor === 'bot' && m.resultado && RES[m.resultado] ? `<span class="tag ${RES[m.resultado][0]}">${RES[m.resultado][1]}</span>` : '';
+    const fb = m.feedback ? (m.feedback === 'pos' ? '👍' : '👎') : '';
+    return `<div class="m ${m.autor}">${quem}${fmt(m.texto)}<div class="rod">${r}${fb}<span>${quando(m.criado_em)}</span></div></div>`;
+  }).join('');
+  const podeResponder = c.status !== 'encerrada';
+  $('#det').innerHTML = `
+    <div class="det-h">
+      <button class="btn sm voltar" id="bVoltar">←</button>
+      <div class="who"><b>${esc(nomeConv(c))}</b><small>${c.visitante_contato ? '📱 ' + esc(c.visitante_contato) + ' · ' : ''}iniciada ${quando(c.criado_em)}${!empresaSel && empresas.length > 1 ? ' · ' + esc(nomeEmp(c.empresa_id)) : ''}</small></div>
+      <span class="tag ${cls}">${lbl}</span>
+      ${c.status === 'aguardando_humano' || c.status === 'bot' ? `<button class="btn sm hum" data-a="assumir">Assumir atendimento</button>` : ''}
+      ${c.status === 'humano' || c.status === 'aguardando_humano' ? `<button class="btn sm" data-a="bot">Devolver ao bot</button>` : ''}
+      ${c.status !== 'encerrada' ? `<button class="btn sm" data-a="encerrar">Encerrar</button>` : ''}
+    </div>
+    <div class="msgs" id="dMsgs">${msgsHtml || '<div class="m sistema">Sem mensagens.</div>'}</div>
+    ${podeResponder ? `${c.status !== 'humano' ? `<div class="dica">Ao enviar uma mensagem, o bot pausa e você assume a conversa.</div>` : ''}
+    <form class="comp" id="fComp"><textarea id="tResp" rows="1" placeholder="Escreva sua resposta…" maxlength="4000"></textarea><button class="btn hum">Enviar</button></form>` : `<div class="dica" style="padding:12px 16px">Conversa encerrada. Se o cliente escrever de novo, ela volta para o bot.</div>`}`;
+  const box = $('#dMsgs'); box.scrollTop = box.scrollHeight;
+  $('#bVoltar').onclick = fecharDetalhe;
+  $('#det .det-h').onclick = e => { const b = e.target.closest('[data-a]'); if (b) acao(b.dataset.a); };
+  const t = $('#tResp');
+  if (t) {
+    t.addEventListener('input', () => { t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 140) + 'px'; });
+    t.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#fComp').requestSubmit(); } });
+    $('#fComp').onsubmit = e => { e.preventDefault(); responder(); };
+    if (focar && c.status === 'humano') t.focus();
+  }
+}
+
+async function mudarStatus(c, status, aviso){
+  const upd = { status };
+  if (status === 'humano') upd.atendente_nome = perfil.nome || 'Atendente';
+  const { error } = await sb.from('conversas').update(upd).eq('id', c.id);
+  if (error) throw error;
+  Object.assign(c, upd);
+  if (aviso) await sb.from('mensagens').insert({ conversa_id: c.id, empresa_id: c.empresa_id, autor: 'sistema', texto: aviso });
+}
+async function acao(a){
+  const c = convs.find(x => x.id === abertaId); if (!c) return;
+  try {
+    if (a === 'assumir') await mudarStatus(c, 'humano', `${perfil.nome || 'Um atendente'} entrou na conversa.`);
+    if (a === 'bot') await mudarStatus(c, 'bot', 'O assistente virtual voltou a responder.');
+    if (a === 'encerrar') { if (!confirm('Encerrar este atendimento?')) return; await mudarStatus(c, 'encerrada', 'Atendimento encerrado. Obrigado pelo contato! 😊'); }
+    renderLista(); renderDetalhe(true);
+  } catch (e) { toast('Não foi possível: ' + e.message); }
+}
+async function responder(){
+  const c = convs.find(x => x.id === abertaId), t = $('#tResp'); const texto = t.value.trim(); if (!c || !texto) return;
+  t.disabled = true;
+  try {
+    if (c.status !== 'humano') await mudarStatus(c, 'humano', `${perfil.nome || 'Um atendente'} entrou na conversa.`);
+    const { error } = await sb.from('mensagens').insert({ conversa_id: c.id, empresa_id: c.empresa_id, autor: 'atendente', autor_nome: perfil.nome || 'Atendente', texto });
+    if (error) throw error;
+    t.value = '';
+  } catch (e) { toast('Mensagem não enviada: ' + e.message); }
+  t.disabled = false; renderLista(); renderDetalhe(true);
+}
+
+/* ── Tempo real + alertas ───────────────── */
+function assinar(){
+  if (canal) sb.removeChannel(canal);
+  const f = empresaSel ? { filter: 'empresa_id=eq.' + empresaSel } : {};
+  canal = sb.channel('painel-' + (empresaSel || 'todas'))
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'conversas', ...f }, p => {
+      const n = p.new; if (!n || !n.id) return;
+      if (!mostrarTeste && n.teste) return;
+      const i = convs.findIndex(c => c.id === n.id), antes = i >= 0 ? convs[i].status : null;
+      if (n.ultima_mensagem == null) return;
+      if (i >= 0) convs[i] = { ...convs[i], ...n }; else convs.unshift(n);
+      convs.sort((a, b) => new Date(b.atualizado_em) - new Date(a.atualizado_em));
+      if (n.status === 'aguardando_humano' && antes !== 'aguardando_humano') alertar(n);
+      renderLista();
+      if (n.id === abertaId && antes !== n.status) renderDetalhe(false);
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mensagens', ...f }, p => {
+      if (p.new.conversa_id !== abertaId || msgsAbertas.some(m => m.id === p.new.id)) return;
+      msgsAbertas.push(p.new);
+      const t = $('#tResp'), rascunho = t ? t.value : '';
+      renderDetalhe(false);
+      if (rascunho && $('#tResp')) { $('#tResp').value = rascunho; $('#tResp').focus(); }
+      if (p.new.autor === 'cliente') sb.from('conversas').update({ nao_lidas: 0 }).eq('id', abertaId).then(() => {});
+    })
+    .subscribe();
+}
+function bip(){
+  if (!somAtivo.v) return;
+  try { const a = new (window.AudioContext || window.webkitAudioContext)(); [0, 0.18].forEach(d => { const o = a.createOscillator(), g = a.createGain(); o.frequency.value = 880; g.gain.setValueAtTime(0.15, a.currentTime + d); g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + d + 0.15); o.connect(g); g.connect(a.destination); o.start(a.currentTime + d); o.stop(a.currentTime + d + 0.16); }); } catch (e) {}
+}
+function alertar(c){
+  bip(); toast(`⏳ ${nomeConv(c)} pediu atendimento`);
+  if ('Notification' in window && Notification.permission === 'granted' && document.hidden)
+    new Notification('Cliente aguardando atendimento', { body: `${nomeConv(c)}: ${c.ultima_mensagem || ''}`.slice(0, 120) });
+}
+async function ativarAlertas(){
+  if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission();
+  bip(); atualizarBotaoAlerta(); toast('Alertas ativos: som + notificação quando alguém pedir atendimento');
+}
+function atualizarBotaoAlerta(){
+  const b = $('#btnAlerta'); if (!b) return;
+  const ok = 'Notification' in window && Notification.permission === 'granted';
+  b.textContent = ok ? '🔔 Alertas ativos' : '🔔 Ativar alertas';
+}
+
+iniciar();
+</script>
+</body>
+</html>
