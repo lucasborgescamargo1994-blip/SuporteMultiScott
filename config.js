@@ -8,7 +8,7 @@
    NUNCA coloque aqui a service_role / secret key.
    ═══════════════════════════════════════════════════════════════ */
 window.SM_CONFIG = {
-  SUPABASE_URL: 'https://zjvgkrjcwqbnrqiltbtb.supabase.co/rest/v1/',
+  SUPABASE_URL: 'https://zjvgkrjcwqbnrqiltbtb.supabase.co',
   SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpqdmdrcmpjd3FibnJxaWx0YnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NDgzMzEsImV4cCI6MjEwNjIyNDMzMX0.lBP846yxrRc0J35InX7wyz7uozeOaOKlm2LSwEMTRfk',
 
   // Nome da Edge Function (pasta supabase/functions/atendimento)
@@ -19,6 +19,9 @@ window.SM_CONFIG = {
   // Deixe vazio enquanto testa localmente.
   CHAT_URL: '',
 };
+
+// Aceita a URL copiada com sobras (ex.: ".../rest/v1/"): usa só o endereço do projeto
+window.SM_CONFIG.SUPABASE_URL = String(window.SM_CONFIG.SUPABASE_URL || '').trim().replace(/\/(rest|auth|functions)\/v1.*$/, '').replace(/\/+$/, '');
 
 // Utilitário comum: chama a Edge Function e devolve a mensagem de erro amigável
 window.smChamar = async function (sb, acao, dados) {
