@@ -156,6 +156,13 @@ pre.code{background:var(--surface-2);border:1px solid var(--border);border-radiu
 .chat-wrap{display:flex;flex-direction:column;min-height:0;background:var(--surface-2);padding:18px;align-items:center}
 .chat-wrap iframe{width:100%;max-width:460px;flex:1;min-height:0;border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);background:var(--surface)}
 .link-box{display:flex;gap:6px}
+.criat{display:flex;flex-direction:column;gap:6px}
+.criat-topo{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11.5px;color:var(--muted);font-weight:600}
+.criat-topo b{font-size:13px;color:var(--text);text-align:center}
+.criat input[type=range]{width:100%;accent-color:var(--b)}
+.criat-desc{font-size:12px;color:var(--muted);background:var(--surface-2);border-radius:8px;padding:8px 10px;min-height:52px}
+.ia-disse{margin-top:8px;font-size:12.5px;background:var(--b-soft);border-radius:9px;padding:8px 11px}
+.ia-disse b{color:var(--b)}
 .link-box input{flex:1;min-width:0;font-size:11.5px;font-family:'JetBrains Mono',monospace}
 .dbg{border-left:1px solid var(--border);background:var(--surface);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
 .dbg .box{border:1px solid var(--border);border-radius:11px;padding:12px}
@@ -240,7 +247,7 @@ const THEME_KEY = 'sm_tema';
 const clone = o => JSON.parse(JSON.stringify(o));
 const PRECOS_PADRAO = { A_proprio:{setup:290,mensal:149}, A_criado:{setup:690,mensal:199}, B_proprio:{setup:490,mensal:299}, B_criado:{setup:990,mensal:379}, descontoPiloto:50 };
 let sb = null, eu = null;
-const S = { empresas:[], base:{}, fila:[], kits:{}, ajustes:{ limiar:0.45, precos:clone(PRECOS_PADRAO) }, acessos:[] };
+const S = { empresas:[], base:{}, fila:[], kits:{}, ajustes:{ limiar:0.45, criatividade:20, precos:clone(PRECOS_PADRAO) }, acessos:[] };
 const ui = { view:'atendimento', empresaAtiva:null, debug:innerWidth>1180, ultimaAnalise:null, baseEmpresa:null, baseBusca:'', filaEmpresa:'', relEmpresa:'', relPeriodo:30, propEmpresa:null, kitAberto:null, iaStatus:null };
 
 function must(r){ if (r.error) throw r.error; return r.data; }
@@ -263,7 +270,7 @@ async function carregarTudo(){
   resps.forEach(r => (S.base[r.empresa_id] || (S.base[r.empresa_id] = [])).push(r));
   S.kits = Object.fromEntries(kits.map(k => [k.id, k.dados]));
   if (!kits.length) await instalarKits();
-  if (aj) S.ajustes = { limiar: aj.limiar, precos: { ...clone(PRECOS_PADRAO), ...(aj.precos || {}) } };
+  if (aj) S.ajustes = { limiar: aj.limiar, criatividade: aj.criatividade ?? 20, precos: { ...clone(PRECOS_PADRAO), ...(aj.precos || {}) } };
   S.acessos = acs;
   await recarregarFila();
   if (!emp(ui.empresaAtiva)) ui.empresaAtiva = S.empresas[0]?.id || null;
@@ -300,6 +307,7 @@ function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');cl
 function erro(e){ console.error(e); toast('⚠️ ' + (e?.message || e)); }
 const emp = id => S.empresas.find(c => c.id === id);
 const kitDe = c => S.kits[c?.nicho] || null;
+const criatividadeDe = c => c?.criatividade ?? S.ajustes.criatividade;
 function resolver(txt, c){return String(txt || '').replace(/\{\{(\w+)\}\}/g, (m, k) => { const v = c?.vars?.[k]; return v && String(v).trim() ? v : '(informação ainda não cadastrada)'; })}
 function bdNome(b){return b === 'criado' ? 'BD criado (kit do nicho)' : 'BD próprio'}
 function tagPlano(c){return `<span class="tag ${c.plano === 'B' ? 'b' : 'a'}">${c.plano === 'B' ? '✨ Opção B · IA' : '⚙️ Opção A · ML'}</span>`}
@@ -440,7 +448,8 @@ function vAtendimento(){
       <div><h4>Cliente</h4><div class="cli-pick">${S.empresas.map(x => `<button class="${x.id === c.id ? 'on' : ''}" data-act="escolherEmpresa" data-id="${x.id}"><span class="av">${kitDe(x)?.icone || '🏪'}</span><span><b>${esc(x.nome)}</b><small>${x.plano === 'B' ? '✨ Bot + IA' : '⚙️ Bot ML'} · ${x.ativo ? 'ativo' : '⛔ desativado'}</small></span></button>`).join('')}</div></div>
       <div><h4>Link público do chat</h4><div class="link-box"><input class="inp" readonly value="${esc(pub)}"><button class="btn sm" data-act="copiarTxt" data-txt="${esc(pub)}">Copiar</button></div>
         <div class="row" style="margin-top:6px"><a class="btn sm" href="${esc(pub)}" target="_blank">Abrir ↗</a><button class="btn sm" data-act="verWidget" data-id="${c.id}">Código do widget</button></div></div>
-      <div><h4>Plano ativo</h4>${tagPlano(c)}<p class="small muted" style="margin-top:6px">${c.plano === 'B' ? 'Linguagem natural com IA (prompt + RAG) usando só a base aprovada. Perguntas com alta confiança são respondidas direto, sem gastar IA.' : '100% previsível: responde apenas o que está cadastrado.'}</p></div>
+      <div><h4>Plano ativo</h4>${tagPlano(c)}<p class="small muted" style="margin-top:6px">${c.plano === 'B' ? 'Linguagem natural com IA (prompt + RAG) sobre a base aprovada.' : '100% previsível: responde apenas o que está cadastrado.'}</p>
+        ${c.plano === 'B' ? (() => { const v = criatividadeDe(c), n = smNivelCriatividade(v); return `<p class="small" style="margin-top:6px">${n.icone} Criatividade <b>${v}% · ${n.nome}</b> <span class="faint">(${c.criatividade == null ? 'padrão' : 'própria do cliente'})</span></p>`; })() : ''}</div>
       <div><h4>Fila de treino</h4><button class="btn sm" data-act="irFila" data-id="${c.id}">🎯 ${pend} pendente${pend === 1 ? '' : 's'} →</button></div>
     </div>
     <div class="chat-wrap"><iframe id="chatFrame" title="Chat de teste" src="${esc(`index.html?c=${encodeURIComponent(c.slug)}&teste=1&full=1`)}"></iframe></div>
@@ -457,7 +466,7 @@ function renderDebug(){
   d.innerHTML = `${fechar}<div><h4>Bastidores · última mensagem</h4><p class="small">“${esc(a.pergunta)}”</p><div class="tokens">${(a.tokens || []).map(t => `<span>${esc(t)}</span>`).join('') || '<span>(sem termos-chave)</span>'}</div></div>
   ${a.top ? `<div class="box"><h4>Intenções candidatas</h4>${a.top.map(m => `<div class="match"><div class="mt"><b>${esc(m.intencao)}</b><span class="mono">${pct(m.score)}</span></div><div class="track"><div class="fill ${cls(m.score)}" style="width:${Math.round(m.score * 100)}%"></div></div><div class="small faint">≈ “${esc(m.pat)}”</div></div>`).join('') || '<p class="small muted">Base vazia.</p>'}</div>` : ''}
   <div class="box"><div class="kv"><span>Decisão</span></div><p class="small" style="margin-top:2px">${esc(a.decisao || '')}</p>${a.aviso ? `<p class="small" style="color:var(--warn);margin-top:6px">⚠️ ${esc(a.aviso)}</p>` : ''}
-  ${a.modo ? `<div class="kv" style="margin-top:8px"><span>Plano</span><b>${a.modo === 'B' ? 'B · IA + RAG' : 'A · Determinístico'}</b></div>` : ''}${a.limiar != null ? `<div class="kv"><span>Limiar</span><b>${pct(a.limiar)}</b></div>` : ''}${a.modelo ? `<div class="kv"><span>Modelo</span><b class="small">${esc(a.modelo)}</b></div>` : ''}${a.ms != null ? `<div class="kv"><span>Tempo no servidor</span><b>${a.ms} ms</b></div>` : ''}</div>`;
+  ${a.modo ? `<div class="kv" style="margin-top:8px"><span>Plano</span><b>${a.modo === 'B' ? 'B · IA + RAG' : 'A · Determinístico'}</b></div>` : ''}${a.limiar != null ? `<div class="kv"><span>Limiar</span><b>${pct(a.limiar)}</b></div>` : ''}${a.criatividade != null ? `<div class="kv"><span>Criatividade</span><b>${a.criatividade}% · ${smNivelCriatividade(a.criatividade).nome}</b></div>` : ''}${a.modelo ? `<div class="kv"><span>Modelo</span><b class="small">${esc(a.modelo)}</b></div>` : ''}${a.ms != null ? `<div class="kv"><span>Tempo no servidor</span><b>${a.ms} ms</b></div>` : ''}</div>`;
 }
 window.addEventListener('message', e => {
   if (e.data?.tipo !== 'sm-analise') return;
@@ -468,7 +477,7 @@ window.addEventListener('message', e => {
 function vFila(){
   const pend = S.fila.filter(f => f.status === 'pendente' && (!ui.filaEmpresa || f.empresa_id === ui.filaEmpresa)).sort((a, b) => b.ocorrencias - a.ocorrencias || new Date(b.atualizado_em) - new Date(a.atualizado_em));
   const resolv = S.fila.filter(f => f.status !== 'pendente' && (!ui.filaEmpresa || f.empresa_id === ui.filaEmpresa)).slice(0, 15);
-  const motivo = { sem_resposta:'sem correspondência', baixa_confianca:'confiança baixa', ia_sem_base:'IA sem base', feedback_negativo:'marcada como errada 👎' };
+  const motivo = { sem_resposta:'sem correspondência', baixa_confianca:'confiança baixa', ia_sem_base:'IA sem base', ia_fora_da_base:'🎨 IA respondeu sem base — revisar', feedback_negativo:'marcada como errada 👎' };
   $('#view').innerHTML = `
   <div class="grid g4" style="margin-bottom:16px">
     <div class="card kpi"><div class="l">Pendentes</div><div class="v">${pend.length}</div><div class="s">≈ ${Math.max(1, Math.ceil(pend.length * 0.7))} min de curadoria</div></div>
@@ -483,9 +492,10 @@ function vFila(){
         <div class="row"><span class="q">“${esc(f.pergunta)}”</span></div>
         <div class="row small" style="margin-top:6px"><span class="tag">${esc(c?.nome || '?')}</span><span class="tag warn">${f.ocorrencias}× perguntada</span><span class="tag">${motivo[f.motivo] || esc(f.motivo || '')}</span>${pal ? `<span class="tag acc">palpite: ${esc(pal.intencao)} · ${pct(f.palpite_score || 0)}</span>` : ''}<span class="faint">${dataHora(f.atualizado_em)}</span>${f.exemplo ? '<span class="tag">exemplo</span>' : ''}</div>
         ${f.variacoes?.length ? `<div class="vars">Também perguntaram: ${f.variacoes.map(v => '“' + esc(v) + '”').join(' · ')}</div>` : ''}
+        ${f.sugestao_ia ? `<div class="ia-disse"><b>A IA respondeu:</b> ${fmt(f.sugestao_ia)}</div>` : ''}
         <div class="q-actions">
           ${pal ? `<button class="btn sm pri" data-act="filaVincular" data-id="${f.id}" data-e="${pal.id}">✓ É “${esc(pal.intencao)}”</button>` : ''}
-          <button class="btn sm" data-act="filaAbrir" data-id="${f.id}" data-modo="nova">✍️ Criar resposta</button>
+          ${f.sugestao_ia ? `<button class="btn sm pri" data-act="filaAbrir" data-id="${f.id}" data-modo="nova">✓ Revisar e aprovar a resposta da IA</button>` : `<button class="btn sm" data-act="filaAbrir" data-id="${f.id}" data-modo="nova">✍️ Criar resposta</button>`}
           <button class="btn sm" data-act="filaAbrir" data-id="${f.id}" data-modo="vincular">🔗 Vincular a existente</button>
           <button class="btn sm ghost" data-act="filaIgnorar" data-id="${f.id}">Ignorar</button>
         </div>
@@ -513,7 +523,8 @@ async function filaAbrir(id, modo){
   }
   const kit = kitDe(c);
   box.innerHTML = `<div class="grid g2"><label class="f">Intenção (nome curto)<input class="inp" id="qi_${id}" value="${esc(sugerirIntencao(f.pergunta))}"></label><label class="f">Categoria<input class="inp" id="qc_${id}" value="Geral" list="catList_${id}"><datalist id="catList_${id}">${[...new Set((S.base[f.empresa_id] || []).map(e => e.categoria))].map(x => `<option value="${esc(x)}">`).join('')}</datalist></label></div>
-    <label class="f">Resposta aprovada <span class="hint">— use variáveis para dados que mudam</span><textarea class="inp" id="qa_${id}" placeholder="Escreva a resposta que o bot deve dar…"></textarea></label>
+    <label class="f">Resposta aprovada <span class="hint">— use variáveis para dados que mudam</span><textarea class="inp" id="qa_${id}" placeholder="Escreva a resposta que o bot deve dar…">${esc(f.sugestao_ia || '')}</textarea></label>
+    ${f.sugestao_ia ? '<p class="small muted">Rascunho = o que a IA respondeu ao cliente. Confira os dados; troque valores fixos por variáveis ({{…}}) quando fizer sentido.</p>' : ''}
     <div class="chips">${(kit?.vars || []).map(v => `<button class="var-chip" data-act="inserirVar" data-alvo="qa_${id}" data-v="${v.k}" title="${esc(v.label)}">{{${v.k}}}</button>`).join('')}</div>
     <div class="row"><button class="btn pri sm" data-act="filaSalvarNova" data-id="${id}">Salvar na base</button><button class="btn sm" data-act="filaSugerirIA" data-id="${id}">✨ Rascunho com IA</button><button class="btn sm ghost" data-act="filaFechar" data-id="${id}">Cancelar</button></div>`;
 }
@@ -611,7 +622,7 @@ function vClientes(){
   if (!S.empresas.length) return semClientes();
   $('#view').innerHTML = `<div class="grid g3">${S.empresas.map(c => { const k = kitDe(c); const pend = S.fila.filter(f => f.empresa_id === c.id && f.status === 'pendente').length; const acs = S.acessos.filter(a => a.empresa_id === c.id).length;
     return `<div class="card cli-card"><div class="hd"><span class="av" style="background:${esc(c.cor)}22">${k?.icone || '🏪'}</span><div style="min-width:0"><h3>${esc(c.nome)}</h3><div class="small muted mono">/${esc(c.slug)}</div></div></div>
-    <div class="row">${tagPlano(c)}<span class="tag">${c.bd === 'criado' ? '🧩 BD criado' : '📝 BD próprio'}</span>${c.piloto ? '<span class="tag warn">piloto</span>' : ''}${c.ativo ? '' : '<span class="tag err">desativado</span>'}${c.exemplo ? '<span class="tag">exemplo</span>' : ''}</div>
+    <div class="row">${tagPlano(c)}<span class="tag">${c.bd === 'criado' ? '🧩 BD criado' : '📝 BD próprio'}</span>${c.plano === 'B' ? `<span class="tag b" title="Criatividade da IA${c.criatividade == null ? ' (padrão)' : ''}">${smNivelCriatividade(criatividadeDe(c)).icone} ${criatividadeDe(c)}%</span>` : ''}${c.piloto ? '<span class="tag warn">piloto</span>' : ''}${c.ativo ? '' : '<span class="tag err">desativado</span>'}${c.exemplo ? '<span class="tag">exemplo</span>' : ''}</div>
     <div class="small muted">${esc(k?.nome || 'Sem kit')} · ${(S.base[c.id] || []).length} respostas · ${pend} na fila · ${acs} acesso${acs === 1 ? '' : 's'} ao painel</div>
     <div class="row"><button class="btn sm pri" data-act="abrirAtendimento" data-id="${c.id}">💬 Testar</button><button class="btn sm" data-act="editarCliente" data-id="${c.id}">Editar</button><button class="btn sm" data-act="verAcessos" data-id="${c.id}">Acessos</button><button class="btn sm" data-act="verWidget" data-id="${c.id}">Link / widget</button><button class="btn sm" data-act="verBase" data-id="${c.id}">Base</button><button class="btn sm" data-act="verProposta" data-id="${c.id}">Proposta</button></div></div>`; }).join('')}</div>`;
 }
@@ -626,6 +637,9 @@ function formCliente(c){
   <div class="grid g2"><label class="f">Cor do chat<input class="inp" type="color" id="fcCor" value="${esc(c.cor || '#4f46e5')}"></label>
   <div class="f" style="justify-content:flex-end;gap:8px"><label class="row small" style="gap:8px"><input type="checkbox" id="fcAtivo" ${c.ativo !== false ? 'checked' : ''}> Chat ativo (desmarque para tirar do ar)</label>
   <label class="row small" style="gap:8px"><input type="checkbox" id="fcPiloto" ${c.piloto ? 'checked' : ''}> Projeto piloto</label></div></div>
+  <div class="f"><span style="font-size:12px;font-weight:700;color:var(--muted)">Criatividade da IA <span class="hint" style="font-weight:500;color:var(--faint)">— vale para a Opção B · o cliente também pode ajustar no painel</span></span>
+    <label class="row small" style="gap:8px"><input type="checkbox" id="fcCriPadrao" ${c.criatividade == null ? 'checked' : ''} onchange="document.getElementById('fcCriRng').disabled=this.checked"> Usar o padrão das Configurações (${S.ajustes.criatividade}%)</label>
+    ${smControleCriatividade('fcCri', c.criatividade ?? S.ajustes.criatividade, c.criatividade == null)}</div>
   <label class="f">Mensagem de boas-vindas <span class="hint">— vazio usa a do kit</span><textarea class="inp" id="fcSaud" style="min-height:60px" placeholder="${esc(kit?.saudacao || '')}">${esc(c.saudacao || '')}</textarea></label>
   <div><b style="font-size:13px">Dados do negócio</b><p class="small muted">Preenchem as variáveis {{…}} das respostas. É aqui que se “ajusta preços e horários”.</p></div>
   <div class="grid g2" id="fcVars">${camposVars(c.nicho, c.vars || {})}</div>`;
@@ -729,6 +743,11 @@ function vConfig(){
     <label class="f">Limiar de confiança: <b id="limVal" style="color:var(--text)">${pct(S.ajustes.limiar)}</b><input type="range" min="0.25" max="0.8" step="0.01" value="${S.ajustes.limiar}" id="cfLim"></label>
     <p class="small muted">Abaixo desse valor o bot não arrisca: oferece sugestões ou responde a mensagem padrão e manda a pergunta para a fila de treino. Mais alto = mais conservador (mais itens na fila); mais baixo = responde mais, com mais risco de errar. Vale para todos os clientes na hora.</p>
   </div></div>
+  <div class="card"><div class="card-h"><h3>🎨 Criatividade da IA · padrão</h3></div><div class="card-b" style="display:flex;flex-direction:column;gap:12px">
+    ${smControleCriatividade('cfCri', S.ajustes.criatividade)}
+    <p class="small muted">Vale para os clientes da Opção B que não escolheram um grau próprio. Cada cliente pode ter o seu (em Clientes → Editar) e também ajustar no painel dele. Respostas que a IA der por conta própria caem na Fila de treino para você revisar.</p>
+    ${(() => { const proprios = S.empresas.filter(c => c.plano === 'B' && c.criatividade != null); return proprios.length ? `<div class="small">Com grau próprio: ${proprios.map(c => `<span class="tag b">${esc(c.nome)} · ${c.criatividade}%</span>`).join(' ')}</div>` : ''; })()}
+  </div></div>
   <div class="card"><div class="card-h"><h3>✨ IA generativa (Opção B)</h3></div><div class="card-b" style="display:flex;flex-direction:column;gap:12px">
     <p class="small muted">A chave da IA fica guardada no servidor (segredos da Edge Function), nunca no navegador. Sem chave, clientes da Opção B são atendidos pelo motor determinístico.</p>
     <div class="row"><button class="btn sm" data-act="testarIA">🔌 Testar IA</button><span class="small" id="iaSt">${s ? (s.configurada ? `✅ ${esc(s.provider)} · ${esc(s.model)} · respondeu “${esc(s.resposta)}” em ${s.ms} ms` : '⚠️ IA não configurada') : ''}</span></div>
@@ -746,6 +765,7 @@ function vConfig(){
     <div class="row"><button class="btn sm" data-act="criarExemplos">Criar clientes de exemplo</button><button class="btn sm danger" data-act="limparExemplos">Remover dados de exemplo</button></div>
   </div></div></div>`;
   $('#cfLim').oninput = e => { $('#limVal').textContent = pct(+e.target.value); };
+  $('#cfCriRng').onchange = async e => { const v = +e.target.value; try { must(await sb.from('ajustes').update({ criatividade: v }).eq('id', 1)); S.ajustes.criatividade = v; toast(`Criatividade padrão: ${v}% · ${smNivelCriatividade(v).nome}`); } catch (err) { erro(err); } };
   $('#cfLim').onchange = async e => { try { must(await sb.from('ajustes').update({ limiar: +e.target.value }).eq('id', 1)); S.ajustes.limiar = +e.target.value; toast('Limiar salvo'); } catch (err) { erro(err); } };
 }
 function baixar(nome, obj){ const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' })); a.download = nome; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
@@ -833,7 +853,7 @@ const A = {
     if (!/^[a-z0-9][a-z0-9-]{2,39}$/.test(slug)) return toast('Endereço do chat precisa ter de 3 a 40 letras/números');
     const vars = {}; document.querySelectorAll('.fcVar').forEach(t => { if (t.value.trim()) vars[t.dataset.k] = t.value.trim(); });
     if (!vars.empresa) vars.empresa = nome;
-    const dados = { nome, slug, nicho: $('#fcNicho').value, plano: $('#fcPlano').value, tom: $('#fcTom').value, cor: $('#fcCor').value, ativo: $('#fcAtivo').checked, piloto: $('#fcPiloto').checked, saudacao: $('#fcSaud').value.trim() || null, vars };
+    const dados = { nome, slug, nicho: $('#fcNicho').value, plano: $('#fcPlano').value, tom: $('#fcTom').value, cor: $('#fcCor').value, ativo: $('#fcAtivo').checked, piloto: $('#fcPiloto').checked, saudacao: $('#fcSaud').value.trim() || null, vars, criatividade: $('#fcCriPadrao').checked ? null : +$('#fcCriRng').value };
     await ocupado(el, async () => {
       try {
         if (id) Object.assign(emp(id), must(await sb.from('empresas').update(dados).eq('id', id).select().single()));
