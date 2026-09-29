@@ -8,8 +8,8 @@
    NUNCA coloque aqui a service_role / secret key.
    ═══════════════════════════════════════════════════════════════ */
 window.SM_CONFIG = {
-  SUPABASE_URL: 'https://SEU-PROJETO.supabase.co',
-  SUPABASE_KEY: 'COLE-AQUI-A-CHAVE-ANON-OU-PUBLISHABLE',
+  SUPABASE_URL: 'https://zjvgkrjcwqbnrqiltbtb.supabase.co/rest/v1/',
+  SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpqdmdrcmpjd3FibnJxaWx0YnRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2NDgzMzEsImV4cCI6MjEwNjIyNDMzMX0.lBP846yxrRc0J35InX7wyz7uozeOaOKlm2LSwEMTRfk',
 
   // Nome da Edge Function (pasta supabase/functions/atendimento)
   FUNCAO: 'atendimento',
