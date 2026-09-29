@@ -17,7 +17,7 @@ window.SM_CONFIG = {
   // Endereço público onde o index.html (chat) foi publicado, terminando em "/".
   // Usado para montar os links e o código do widget. Ex.: 'https://atendimento.seudominio.com.br/'
   // Deixe vazio enquanto testa localmente.
-  CHAT_URL: '',
+  CHAT_URL: 'https://lucasborgescamargo1994-blip.github.io/SuporteMultiScott/',
 };
 
 // Aceita a URL copiada com sobras (ex.: ".../rest/v1/"): usa só o endereço do projeto
